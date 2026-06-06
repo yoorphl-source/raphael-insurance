@@ -31,12 +31,12 @@ export default function Home() {
           </p>
 
           {/* CTA */}
-          <button
-            type="button"
-            className="mt-10 rounded-full bg-blue-500 px-10 py-4 text-lg font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:bg-blue-400 hover:shadow-blue-400/40 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+          <a
+            href="#consult-form"
+            className="mt-10 inline-block rounded-full bg-blue-500 px-10 py-4 text-lg font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:bg-blue-400 hover:shadow-blue-400/40 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
           >
             무료 상담 신청하기
-          </button>
+          </a>
 
           {/* Trust signals */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate-400">

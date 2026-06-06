@@ -75,7 +75,7 @@ export default function ConsultForm() {
 
   // ── Form ───────────────────────────────────────────────────
   return (
-    <section className="bg-[#0a1628] px-6 py-16 sm:py-20">
+    <section id="consult-form" className="bg-[#0a1628] px-6 py-16 sm:py-20">
       <div className="mx-auto max-w-lg">
         {/* Section header */}
         <div className="mb-10 text-center">
