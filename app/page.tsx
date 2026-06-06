@@ -74,7 +74,6 @@ export default function Home() {
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <span className="text-base font-bold tracking-tight text-gray-900">KPARTNERS</span>
-            <span className="hidden text-sm text-gray-400 sm:block">[담당자명]</span>
           </div>
           <a
             href="#consult-form"
@@ -104,35 +103,6 @@ export default function Home() {
             >
               지금 무료 상담 신청하기
             </a>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Consultant ── */}
-      <section className="border-b border-gray-100 bg-gray-50 px-6 py-12 sm:py-16">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="mb-8 text-xl font-bold text-gray-900">담당 설계사</h2>
-          <div className="flex items-start gap-6">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-gray-200">
-              <svg
-                className="h-9 w-9 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 7.5a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-base font-bold text-gray-900">[담당 설계사 이름]</p>
-              <p className="mt-0.5 text-xs text-gray-400">
-                설계사 등록번호 [설계사 등록번호]
-              </p>
-              <p className="mt-3 max-w-md text-sm leading-relaxed text-gray-500">
-                "보험 상품을 파는 것이 아니라, 필요한 보장을 찾아드립니다."
-              </p>
-            </div>
           </div>
         </div>
       </section>
