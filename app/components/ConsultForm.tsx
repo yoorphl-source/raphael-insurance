@@ -22,7 +22,6 @@ export default function ConsultForm() {
   const [inquiry, setInquiry] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [policyOpen, setPolicyOpen] = useState(false);
-
   const [submitResult, setSubmitResult] = useState<'success' | 'error' | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [isPending, startTransition] = useTransition();
@@ -56,16 +55,18 @@ export default function ConsultForm() {
     });
   }
 
-  // ── Success state ──────────────────────────────────────────
+  // ── Success ───────────────────────────────────────────────
   if (submitResult === 'success') {
     return (
-      <section className="bg-[#0a1628] px-6 py-20">
+      <section id="consult-form" className="border-b border-gray-100 bg-gray-50 px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-lg text-center">
-          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/20 text-4xl">
-            ✓
+          <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#1e3a5f]/10">
+            <svg className="h-5 w-5 text-[#1e3a5f]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
           </div>
-          <h2 className="text-2xl font-bold text-white">신청이 접수되었습니다</h2>
-          <p className="mt-3 text-slate-400">
+          <h2 className="text-xl font-bold text-gray-900">신청이 접수되었습니다</h2>
+          <p className="mt-2 text-sm text-gray-500">
             영업일 기준 24시간 이내에 담당 컨설턴트가 연락드리겠습니다.
           </p>
         </div>
@@ -73,23 +74,17 @@ export default function ConsultForm() {
     );
   }
 
-  // ── Form ───────────────────────────────────────────────────
+  // ── Form ─────────────────────────────────────────────────
   return (
-    <section id="consult-form" className="bg-[#0a1628] px-6 py-16 sm:py-20">
+    <section id="consult-form" className="border-b border-gray-100 bg-gray-50 px-6 py-12 sm:py-16">
       <div className="mx-auto max-w-lg">
-        {/* Section header */}
-        <div className="mb-10 text-center">
-          <h2 className="text-2xl font-bold text-white sm:text-3xl">무료 상담 신청</h2>
-          <p className="mt-2 text-slate-400">
-            아래 정보를 입력하시면 전문가가 빠르게 연락드립니다.
-          </p>
-        </div>
+        <h2 className="mb-8 text-xl font-bold text-gray-900">무료 상담 신청</h2>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-5">
           {/* 이름 */}
           <div>
-            <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-slate-300">
-              이름 <span className="text-blue-400">*</span>
+            <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-gray-700">
+              이름 <span className="text-[#1e3a5f]">*</span>
             </label>
             <input
               id="name"
@@ -98,14 +93,14 @@ export default function ConsultForm() {
               onChange={(e) => setName(e.target.value)}
               placeholder="홍길동"
               required
-              className="w-full rounded-lg bg-white/5 px-4 py-3 text-white placeholder-slate-500 ring-1 ring-white/10 transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]"
             />
           </div>
 
-          {/* 휴대폰 번호 */}
+          {/* 휴대폰 */}
           <div>
-            <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-slate-300">
-              휴대폰 번호 <span className="text-blue-400">*</span>
+            <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-gray-700">
+              휴대폰 번호 <span className="text-[#1e3a5f]">*</span>
             </label>
             <input
               id="phone"
@@ -116,42 +111,40 @@ export default function ConsultForm() {
               onBlur={() => setPhoneTouched(true)}
               placeholder="010-0000-0000"
               required
-              className={`w-full rounded-lg bg-white/5 px-4 py-3 text-white placeholder-slate-500 ring-1 transition focus:outline-none focus:ring-2 ${
+              className={`w-full rounded border bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition focus:outline-none focus:ring-1 ${
                 phoneTouched && !phoneValid
-                  ? 'ring-red-500 focus:ring-red-500'
-                  : 'ring-white/10 focus:ring-blue-500'
+                  ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                  : 'border-gray-300 focus:border-[#1e3a5f] focus:ring-[#1e3a5f]'
               }`}
             />
             {phoneTouched && !phoneValid && (
-              <p className="mt-1.5 text-xs text-red-400">010-0000-0000 형식으로 입력해주세요.</p>
+              <p className="mt-1.5 text-xs text-red-500">010-0000-0000 형식으로 입력해주세요.</p>
             )}
           </div>
 
           {/* 관심 보험 */}
           <div>
-            <label htmlFor="insurance" className="mb-1.5 block text-sm font-medium text-slate-300">
+            <label htmlFor="insurance" className="mb-1.5 block text-sm font-medium text-gray-700">
               관심 보험
             </label>
             <select
               id="insurance"
               value={insurance}
               onChange={(e) => setInsurance(e.target.value)}
-              className="w-full rounded-lg bg-[#0f1e3c] px-4 py-3 text-white ring-1 ring-white/10 transition focus:outline-none focus:ring-2 focus:ring-blue-500 [&>option]:bg-[#0f1e3c]"
+              className="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]"
             >
               <option value="">선택 안 함</option>
               {INSURANCE_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}보험
-                </option>
+                <option key={opt} value={opt}>{opt}보험</option>
               ))}
             </select>
           </div>
 
           {/* 문의 내용 */}
           <div>
-            <label htmlFor="inquiry" className="mb-1.5 block text-sm font-medium text-slate-300">
+            <label htmlFor="inquiry" className="mb-1.5 block text-sm font-medium text-gray-700">
               문의 내용{' '}
-              <span className="text-xs font-normal text-slate-500">(선택)</span>
+              <span className="text-xs font-normal text-gray-400">(선택)</span>
             </label>
             <textarea
               id="inquiry"
@@ -159,41 +152,42 @@ export default function ConsultForm() {
               onChange={(e) => setInquiry(e.target.value)}
               rows={4}
               placeholder="궁금한 점이나 현재 상황을 자유롭게 적어주세요."
-              className="w-full resize-none rounded-lg bg-white/5 px-4 py-3 text-white placeholder-slate-500 ring-1 ring-white/10 transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full resize-none rounded border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]"
             />
           </div>
 
           {/* 개인정보 동의 */}
-          <div className="rounded-lg bg-white/5 p-4 ring-1 ring-white/10">
+          <div className="rounded border border-gray-200 bg-white p-4">
             <label className="flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-blue-500"
+                className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#1e3a5f]"
               />
-              <span className="text-sm text-slate-300">
-                <span className="font-semibold text-white">[필수]</span> 개인정보 수집·이용에 동의합니다.
+              <span className="text-sm text-gray-700">
+                <span className="font-semibold text-gray-900">[필수]</span>{' '}
+                개인정보 수집·이용에 동의합니다.
               </span>
               <button
                 type="button"
                 onClick={() => setPolicyOpen((v) => !v)}
                 aria-expanded={policyOpen}
-                className="ml-auto shrink-0 text-xs text-blue-400 underline underline-offset-2 hover:text-blue-300"
+                className="ml-auto shrink-0 text-xs text-[#1e3a5f] underline underline-offset-2 hover:opacity-70"
               >
                 {policyOpen ? '접기' : '내용 보기'}
               </button>
             </label>
             {policyOpen && (
-              <div className="mt-3 rounded-md bg-white/5 p-3 text-xs leading-relaxed text-slate-400">
+              <div className="mt-3 rounded bg-gray-50 p-3 text-xs leading-relaxed text-gray-500">
                 [준법 검토 후 교체 예정]
               </div>
             )}
           </div>
 
-          {/* 서버 오류 메시지 */}
+          {/* 서버 오류 */}
           {submitResult === 'error' && (
-            <p className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400 ring-1 ring-red-500/30">
+            <p className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               {errorMsg}
             </p>
           )}
@@ -202,7 +196,7 @@ export default function ConsultForm() {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="w-full rounded-full py-4 text-base font-semibold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400 disabled:cursor-not-allowed disabled:opacity-40 enabled:bg-blue-500 enabled:text-white enabled:shadow-lg enabled:shadow-blue-500/30 enabled:hover:bg-blue-400 enabled:active:scale-95"
+            className="w-full rounded bg-[#1e3a5f] py-3 text-sm font-semibold text-white transition hover:bg-[#162d4a] disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isPending ? '처리 중…' : '신청하기'}
           </button>
