@@ -6,7 +6,7 @@ export default function Home() {
       <main className="bg-[#0f1e3c]">
         {/* Nav bar */}
         <header className="px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
-          <span className="text-white font-bold text-lg tracking-tight">든든보험</span>
+          <span className="text-white font-bold text-lg tracking-tight">KPARTNERS</span>
           <span className="text-slate-400 text-sm hidden sm:block">
             평일 09:00 – 18:00 · 1588-0000
           </span>
