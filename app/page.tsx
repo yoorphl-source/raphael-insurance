@@ -56,16 +56,16 @@ export default function Home() {
     <>
       {/* ── Nav ── */}
       <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <div>
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <div className="min-w-0">
             <span className="block text-base font-bold tracking-tight text-gray-900">
               [브랜드명]
             </span>
-            <span className="text-xs text-gray-400">치우치지 않은 보험 비교, 채팅으로</span>
+            <span className="block truncate text-xs text-gray-400">치우치지 않은 보험 비교, 채팅으로</span>
           </div>
           <Link
             href="/chat"
-            className="rounded bg-[#1e3a5f] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#162d4a]"
+            className="shrink-0 whitespace-nowrap rounded bg-[#1e3a5f] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#162d4a]"
           >
             채팅 상담 시작하기
           </Link>
@@ -73,7 +73,7 @@ export default function Home() {
       </header>
 
       {/* ── Hero ── */}
-      <section className="border-b border-gray-100 bg-white px-6 py-16 sm:py-24">
+      <section className="border-b border-gray-100 bg-white px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto flex max-w-5xl flex-col gap-10 lg:flex-row lg:items-center lg:gap-16">
           {/* 텍스트 */}
           <div className="flex-1">
@@ -106,7 +106,7 @@ export default function Home() {
       </section>
 
       {/* ── 강점 ── */}
-      <section className="border-b border-gray-100 bg-gray-50 px-6 py-12 sm:py-16">
+      <section className="border-b border-gray-100 bg-gray-50 px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-8 text-xl font-bold text-gray-900">이런 점이 다릅니다</h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -124,7 +124,7 @@ export default function Home() {
       </section>
 
       {/* ── 고객 리뷰 (마퀴) ── */}
-      <section className="border-b border-gray-100 bg-white py-12 sm:py-16">
+      <section className="overflow-x-hidden border-b border-gray-100 bg-white py-12 sm:py-16">
         <div className="mx-auto mb-8 max-w-5xl px-6">
           <h2 className="text-xl font-bold text-gray-900">고객 후기</h2>
         </div>
@@ -152,7 +152,7 @@ export default function Home() {
       </section>
 
       {/* ── CTA 배너 ── */}
-      <section className="bg-[#1e3a5f] px-6 py-16 sm:py-20">
+      <section className="bg-[#1e3a5f] px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-5xl">
           <h2 className="max-w-lg text-2xl font-bold text-white break-keep sm:text-3xl">
             궁금한 것만, 채팅으로 가볍게 물어보세요
@@ -172,7 +172,7 @@ export default function Home() {
       </section>
 
       {/* ── 푸터 ── */}
-      <footer className="bg-gray-900 px-6 py-10 text-sm text-gray-400">
+      <footer className="bg-gray-900 px-4 py-10 text-sm text-gray-400 sm:px-6">
         <div className="mx-auto max-w-5xl space-y-2">
           <p className="font-semibold text-white">[브랜드명]</p>
           <p>[법인 상호 · 사업자등록번호 · 등록 정보]</p>

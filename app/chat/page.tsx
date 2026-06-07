@@ -365,13 +365,13 @@ export default function ChatPage() {
       )}
 
       {/* ── Nav ── */}
-      <header className="shrink-0 border-b border-gray-200 bg-white px-6 py-3">
-        <div className="mx-auto flex max-w-2xl items-center justify-between">
-          <Link href="/" className="text-sm text-gray-500 transition hover:text-gray-900">
+      <header className="shrink-0 border-b border-gray-200 bg-white px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-2">
+          <Link href="/" className="shrink-0 text-sm text-gray-500 transition hover:text-gray-900">
             ← 홈으로
           </Link>
-          <span className="text-sm font-semibold text-gray-900">라파엘 보험 도우미</span>
-          <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">AI 도우미</span>
+          <span className="min-w-0 truncate text-center text-sm font-semibold text-gray-900">라파엘 보험 도우미</span>
+          <span className="shrink-0 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">AI 도우미</span>
         </div>
       </header>
 
@@ -384,7 +384,7 @@ export default function ChatPage() {
       </div>
 
       {/* ── Messages ── */}
-      <main className="flex-1 overflow-y-auto px-4 py-5">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-4 sm:py-5">
         <div className="mx-auto max-w-2xl space-y-3">
           {messages.map((msg) => (
             <div
@@ -423,7 +423,7 @@ export default function ChatPage() {
 
       {/* ── Input area ── */}
       {introPhase === 'gone' && (
-        <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-4">
+        <div className="shrink-0 border-t border-gray-200 bg-white px-3 py-3 sm:px-4 sm:py-4">
           <div
             className={`mx-auto max-w-2xl space-y-2 transition-opacity duration-200 ${
               isTyping ? 'pointer-events-none opacity-40' : ''
@@ -567,11 +567,11 @@ export default function ChatPage() {
 
             {step === 'phone_input' && (
               <div className="space-y-2">
-                <div className="flex items-center gap-1.5 justify-center text-xs text-gray-400">
+                <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 text-xs text-gray-400">
                   <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                   </svg>
-                  안전하게 보관되며, 상담 외 목적으로 사용되지 않습니다
+                  <span>안전하게 보관되며, 상담 외 목적으로 사용되지 않습니다</span>
                 </div>
                 <form onSubmit={(e) => { e.preventDefault(); handlePhone(); }} className="flex gap-2">
                   <input autoFocus type="tel" inputMode="numeric" value={textInput}

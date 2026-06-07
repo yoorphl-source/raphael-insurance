@@ -8,6 +8,8 @@
 body {
   color: #111827;
   background: #ffffff;
+  overflow-x: hidden; /* prevent horizontal scroll from any overflowing child */
+  max-width: 100%;
 }
 
 @keyframes marquee {
