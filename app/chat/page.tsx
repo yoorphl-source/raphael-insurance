@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { submitChatLead } from '@/app/actions/submitChatLead';
 import { normalizeName, normalizeDOB, normalizePhone, extractNumber } from '@/app/lib/normalizers';
@@ -96,6 +96,22 @@ function getProgress(step: Step): number {
 const DOB_MSG =
   '정확한 보험료와 보장을 안내드리려면 생년월일이 필요해요. 보험은 나이에 따라 조건이 달라지거든요. (예: 1990-01-01)';
 
+// 하단 바를 사용하는 버튼 단계
+const BUTTON_STEPS: Step[] = [
+  'gender_buttons', 'insurance_type', 'housing_type', 'housing_floor',
+  'driver_usage', 'driver_vehicle', 'driver_plan',
+];
+
+// ── Send icon ─────────────────────────────────────────────────
+
+function SendIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+    </svg>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────
 
 export default function ChatPage() {
@@ -119,10 +135,15 @@ export default function ChatPage() {
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  // Auto-scroll
+  // 새 메시지·타이핑 변화 시 스크롤
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
+
+  // 키보드가 올라올 때 입력칸 위치로 스크롤 (모바일)
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 320);
+  }, []);
 
   // Intro → first bot message
   useEffect(() => {
@@ -190,7 +211,7 @@ export default function ChatPage() {
         '어떤 형태의 주거지인가요?',
       ],
       '운전자': [
-        '운전자보험은 자동차보험으로 채워지지 않는 운전 중 사고의 부담을 보완하는 보험이에요. 차량 용도와 종류에 따라 달라져서 몇 가지 확인할게요.',
+        '운전자보험은 자동차보험으로 채워지지 않는 운전 중 사고의 부담을 보완하는 보험이에요. 차량 용도와 종류에 따라 달라져서 몇 ��지 확인할게요.',
         '차량 용도가 어떻게 되나요?',
       ],
       '암·질병': [
@@ -290,7 +311,6 @@ export default function ChatPage() {
     userSay(phone);
     setData((d) => ({ ...d, phone }));
 
-    // Build detail object from sub-answers
     const detail: Record<string, string> = {};
     if (data.insuranceType === '주택') {
       if (data.housingType)      detail.housing_type       = data.housingType;
@@ -303,10 +323,9 @@ export default function ChatPage() {
       if (data.driverPlan)    detail.driver_plan    = data.driverPlan;
     }
 
-    // Fire-and-forget: failure is silent to the user
     void submitChatLead({
       name: data.name,
-      phone,                       // use local var — state update is async
+      phone,
       gender: data.gender,
       insuranceType: data.insuranceType,
       detail,
@@ -335,6 +354,14 @@ export default function ChatPage() {
       : ['2만원 기본형', '3만원 상해보장형'];
 
   const progress = getProgress(step);
+  const isButtonStep = BUTTON_STEPS.includes(step);
+
+  // ── Shared inline input styles ────────────────────────────
+
+  const inputCls =
+    'flex-1 min-w-0 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-sm shadow-sm ring-1 ring-gray-100 focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]';
+  const sendBtnCls =
+    'shrink-0 flex items-center justify-center rounded-full bg-[#1e3a5f] p-2.5 text-white transition hover:bg-[#162d4a] disabled:opacity-40';
 
   // ── Render ────────────────────────────────────────────────
 
@@ -386,9 +413,11 @@ export default function ChatPage() {
         />
       </div>
 
-      {/* ── Messages ── */}
+      {/* ── Messages + inline inputs ── */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-4 sm:py-5">
         <div className="mx-auto max-w-2xl space-y-3">
+
+          {/* 메시지 버블 */}
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -406,6 +435,7 @@ export default function ChatPage() {
             </div>
           ))}
 
+          {/* 타이핑 인디케이터 */}
           {isTyping && (
             <div className="flex justify-start">
               <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100">
@@ -420,40 +450,132 @@ export default function ChatPage() {
             </div>
           )}
 
+          {/* ── 인라인 텍스트 입력 (자유 입력 단계) ── */}
+          {introPhase === 'gone' && !isTyping && (
+            <>
+              {step === 'name_input' && (
+                <form onSubmit={(e) => { e.preventDefault(); handleName(); }} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    onFocus={scrollToBottom}
+                    placeholder="이름을 입력하세요"
+                    className={inputCls}
+                  />
+                  <button type="submit" disabled={!textInput.trim()} className={sendBtnCls}>
+                    <SendIcon />
+                  </button>
+                </form>
+              )}
+
+              {step === 'housing_size' && (
+                <form onSubmit={(e) => { e.preventDefault(); handleHousingSize(); }} className="flex gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    onFocus={scrollToBottom}
+                    placeholder="예: 25, 30평, 25평형"
+                    className={inputCls}
+                  />
+                  <button type="submit" disabled={extractNumber(textInput) === null} className={sendBtnCls}>
+                    <SendIcon />
+                  </button>
+                </form>
+              )}
+
+              {step === 'housing_age' && (
+                <form onSubmit={(e) => { e.preventDefault(); handleHousingAge(); }} className="flex gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    onFocus={scrollToBottom}
+                    placeholder="예: 2010, 2015년식"
+                    className={inputCls}
+                  />
+                  <button type="submit" disabled={extractNumber(textInput) === null} className={sendBtnCls}>
+                    <SendIcon />
+                  </button>
+                </form>
+              )}
+
+              {step === 'dob_input' && (
+                <form onSubmit={(e) => { e.preventDefault(); handleDOB(); }} className="flex gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    onFocus={scrollToBottom}
+                    placeholder="예: 19900101, 1990-01-01, 1990년 1월 1일"
+                    className={inputCls}
+                  />
+                  <button type="submit" disabled={normalizeDOB(textInput) === null} className={sendBtnCls}>
+                    <SendIcon />
+                  </button>
+                </form>
+              )}
+
+              {step === 'phone_input' && (
+                <div className="space-y-1.5">
+                  <p className="flex items-center justify-center gap-1 text-xs text-gray-400">
+                    <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                    <span>안전하게 보관되며, 상담 외 목적으로 사용되지 않습니다</span>
+                  </p>
+                  <form onSubmit={(e) => { e.preventDefault(); handlePhone(); }} className="flex gap-2">
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      value={textInput}
+                      onChange={(e) => setTextInput(formatPhone(e.target.value))}
+                      onFocus={scrollToBottom}
+                      placeholder="010-0000-0000"
+                      className={inputCls}
+                    />
+                    <button type="submit" disabled={normalizePhone(textInput) === null} className={sendBtnCls}>
+                      <SendIcon />
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {step === 'done' && (
+                <form onSubmit={(e) => { e.preventDefault(); handlePostDone(); }} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    onFocus={scrollToBottom}
+                    placeholder="추가로 궁금한 점을 입력해주세요"
+                    className={inputCls}
+                  />
+                  <button type="submit" disabled={!textInput.trim()} className={sendBtnCls}>
+                    <SendIcon />
+                  </button>
+                </form>
+              )}
+            </>
+          )}
+
           <div ref={bottomRef} className="h-1" />
         </div>
       </main>
 
-      {/* ── Input area ── */}
-      {introPhase === 'gone' && (
+      {/* ── 하단 버튼 바 (선택 단계만) ── */}
+      {introPhase === 'gone' && isButtonStep && (
         <div
-          className="shrink-0 border-t border-gray-200 bg-white px-3 pt-3 sm:px-4 sm:pt-4"
+          className={`shrink-0 border-t border-gray-200 bg-white px-3 pt-3 sm:px-4 sm:pt-4 transition-opacity duration-200 ${
+            isTyping ? 'pointer-events-none opacity-40' : ''
+          }`}
           style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
         >
-          <div
-            className={`mx-auto max-w-2xl space-y-2 transition-opacity duration-200 ${
-              isTyping ? 'pointer-events-none opacity-40' : ''
-            }`}
-          >
-            {step === 'name_input' && (
-              <form onSubmit={(e) => { e.preventDefault(); handleName(); }} className="flex gap-2">
-                <input
-                  autoFocus
-                  type="text"
-                  value={textInput}
-                  onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="이름을 입력해주세요"
-                  className="flex-1 rounded border border-gray-300 px-4 py-2.5 text-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]"
-                />
-                <button
-                  type="submit"
-                  disabled={!textInput.trim()}
-                  className="rounded bg-[#1e3a5f] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#162d4a] disabled:opacity-40"
-                >
-                  전송
-                </button>
-              </form>
-            )}
+          <div className="mx-auto max-w-2xl space-y-2">
 
             {step === 'gender_buttons' && (
               <div className="flex gap-2">
@@ -486,32 +608,6 @@ export default function ChatPage() {
                   </button>
                 ))}
               </div>
-            )}
-
-            {step === 'housing_size' && (
-              <form onSubmit={(e) => { e.preventDefault(); handleHousingSize(); }} className="flex gap-2">
-                <input autoFocus type="text" inputMode="numeric" value={textInput}
-                  onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="예: 25, 30평, 25평형"
-                  className="flex-1 rounded border border-gray-300 px-4 py-2.5 text-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]" />
-                <button type="submit" disabled={extractNumber(textInput) === null}
-                  className="rounded bg-[#1e3a5f] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#162d4a] disabled:opacity-40">
-                  전송
-                </button>
-              </form>
-            )}
-
-            {step === 'housing_age' && (
-              <form onSubmit={(e) => { e.preventDefault(); handleHousingAge(); }} className="flex gap-2">
-                <input autoFocus type="text" inputMode="numeric" value={textInput}
-                  onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="예: 2010, 2015년식"
-                  className="flex-1 rounded border border-gray-300 px-4 py-2.5 text-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]" />
-                <button type="submit" disabled={extractNumber(textInput) === null}
-                  className="rounded bg-[#1e3a5f] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#162d4a] disabled:opacity-40">
-                  전송
-                </button>
-              </form>
             )}
 
             {step === 'housing_floor' && (
@@ -558,52 +654,6 @@ export default function ChatPage() {
               </div>
             )}
 
-            {step === 'dob_input' && (
-              <form onSubmit={(e) => { e.preventDefault(); handleDOB(); }} className="flex gap-2">
-                <input autoFocus type="text" inputMode="numeric" value={textInput}
-                  onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="예: 19900101, 1990-01-01, 1990년 1월 1일"
-                  className="flex-1 rounded border border-gray-300 px-4 py-2.5 text-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]" />
-                <button type="submit" disabled={normalizeDOB(textInput) === null}
-                  className="rounded bg-[#1e3a5f] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#162d4a] disabled:opacity-40">
-                  전송
-                </button>
-              </form>
-            )}
-
-            {step === 'phone_input' && (
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 text-xs text-gray-400">
-                  <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                  </svg>
-                  <span>안전하게 보관되며, 상담 외 목적으로 사용되지 않습니다</span>
-                </div>
-                <form onSubmit={(e) => { e.preventDefault(); handlePhone(); }} className="flex gap-2">
-                  <input autoFocus type="tel" inputMode="numeric" value={textInput}
-                    onChange={(e) => setTextInput(formatPhone(e.target.value))}
-                    placeholder="010-0000-0000"
-                    className="flex-1 rounded border border-gray-300 px-4 py-2.5 text-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]" />
-                  <button type="submit" disabled={normalizePhone(textInput) === null}
-                    className="rounded bg-[#1e3a5f] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#162d4a] disabled:opacity-40">
-                    전송
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {step === 'done' && (
-              <form onSubmit={(e) => { e.preventDefault(); handlePostDone(); }} className="flex gap-2">
-                <input type="text" value={textInput}
-                  onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="추가로 궁금한 점을 입력해주세요"
-                  className="flex-1 rounded border border-gray-300 px-4 py-2.5 text-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]" />
-                <button type="submit" disabled={!textInput.trim()}
-                  className="rounded bg-[#1e3a5f] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#162d4a] disabled:opacity-40">
-                  전송
-                </button>
-              </form>
-            )}
           </div>
         </div>
       )}
