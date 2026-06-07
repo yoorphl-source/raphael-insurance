@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { submitChatLead } from '@/app/actions/submitChatLead';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -307,6 +308,30 @@ export default function ChatPage() {
     setTextInput('');
     userSay(phone);
     setData((d) => ({ ...d, phone }));
+
+    // Build detail object from sub-answers
+    const detail: Record<string, string> = {};
+    if (data.insuranceType === '주택') {
+      if (data.housingType)      detail.housing_type       = data.housingType;
+      if (data.housingSize)      detail.housing_size       = data.housingSize;
+      if (data.housingAge)       detail.housing_age        = data.housingAge;
+      if (data.housingHighFloor) detail.housing_high_floor = data.housingHighFloor;
+    } else if (data.insuranceType === '운전자') {
+      if (data.driverUsage)   detail.driver_usage   = data.driverUsage;
+      if (data.driverVehicle) detail.driver_vehicle = data.driverVehicle;
+      if (data.driverPlan)    detail.driver_plan    = data.driverPlan;
+    }
+
+    // Fire-and-forget: failure is silent to the user
+    void submitChatLead({
+      name: data.name,
+      phone,                       // use local var — state update is async
+      gender: data.gender,
+      insuranceType: data.insuranceType,
+      detail,
+      birthdate: data.dob,
+    });
+
     sendBotSequence([
       '확인 후 보험사 견적 정리해 연락드릴게요. 감사합니다!',
       '추가로 궁금한 점이 있으시면 언제든 말씀해주세요.',
