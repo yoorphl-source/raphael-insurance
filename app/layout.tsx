@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "KPARTNERS | 보험 무료 상담",
-  description:
-    "현재 가입 보험의 보장 내용을 분석하고, 조건에 맞는 상품을 비교해 안내해 드립니다.",
+  title: "[브랜드명] | 보험 비교 채팅 상담",
+  description: "[메타 설명 — 준법 검토 후 교체 예정]",
 };
 
 export default function RootLayout({
