@@ -7,7 +7,6 @@ import { submitChatLead } from '@/app/actions/submitChatLead';
 // ── Types ─────────────────────────────────────────────────────
 
 type Step =
-  | 'consent'
   | 'name_input'
   | 'gender_buttons'
   | 'insurance_type'
@@ -87,7 +86,6 @@ function matchFAQ(text: string): string | null {
 
 function getProgress(step: Step): number {
   const map: Record<Step, number> = {
-    consent: 0,
     name_input: 10,
     gender_buttons: 16,
     insurance_type: 22,
@@ -111,7 +109,7 @@ export default function ChatPage() {
   type IntroPhase = 'visible' | 'fading' | 'gone';
   const [introPhase, setIntroPhase] = useState<IntroPhase>('visible');
 
-  const [step, setStep] = useState<Step>('consent');
+  const [step, setStep] = useState<Step>('name_input');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [textInput, setTextInput] = useState('');
@@ -138,13 +136,13 @@ export default function ChatPage() {
     const t1 = setTimeout(() => setIntroPhase('fading'), 1500);
     const t2 = setTimeout(() => {
       setIntroPhase('gone');
-      const msg = '[준법 확정 예정 — 개인정보 수집 동의 안내 문구]';
+      const msg = '안녕하세요, 라파엘 보험 도우미입니다. 뭐라고 불러드릴까요?';
       const dur = Math.min(600 + msg.length * 10, 1800);
       setIsTyping(true);
       const t3 = setTimeout(() => {
         setIsTyping(false);
         setMessages([{ id: ++msgId.current, from: 'bot', text: msg }]);
-        setStep('consent');
+        setStep('name_input');
       }, dur);
       timers.current.push(t3);
     }, 2100);
@@ -173,11 +171,6 @@ export default function ChatPage() {
   }
 
   // ── Step handlers ─────────────────────────────────────────
-
-  function handleConsent() {
-    userSay('동의하고 시작합니다');
-    sendBotSequence(['안녕하세요, 라파엘 보험 도우미입니다. 뭐라고 불러드릴까요?'], 'name_input');
-  }
 
   function handleName() {
     const name = textInput.trim();
@@ -448,15 +441,6 @@ export default function ChatPage() {
               isTyping ? 'pointer-events-none opacity-40' : ''
             }`}
           >
-            {step === 'consent' && (
-              <button
-                onClick={handleConsent}
-                className="w-full rounded bg-[#1e3a5f] py-3 text-sm font-semibold text-white transition hover:bg-[#162d4a]"
-              >
-                동의하고 시작
-              </button>
-            )}
-
             {step === 'name_input' && (
               <form onSubmit={(e) => { e.preventDefault(); handleName(); }} className="flex gap-2">
                 <input
