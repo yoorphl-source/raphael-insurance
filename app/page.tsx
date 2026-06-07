@@ -158,7 +158,7 @@ export default function Home() {
             궁금한 것만, 채팅으로 가볍게 물어보세요
           </h2>
           <p className="mt-3 max-w-md text-sm leading-relaxed text-blue-200 break-keep">
-            전문 상담사가 여러 보험사를 비교해 정리해 드려요. 부담 없이, 궁금한 것부터 채팅으로 물어보세요.
+            AI와 전문 상담사가 함께 여러 보험사를 비교해 정리해 드려요. 부담 없이, 궁금한 것부터 채팅으로 물어보세요.
           </p>
           <div className="mt-8">
             <Link
