@@ -136,7 +136,7 @@ export default function ChatPage() {
     const t1 = setTimeout(() => setIntroPhase('fading'), 1500);
     const t2 = setTimeout(() => {
       setIntroPhase('gone');
-      const msg = '안녕하세요, 라파엘 보험 도우미입니다. 뭐라고 불러드릴까요?';
+      const msg = '안녕하세요, AI 도우미 라파엘이에요. 전문 상담사를 연결해 드리기 전에, 어떤 보장이 필요하신지 먼저 파악하려고 몇 가지만 여쭤볼게요. 오래 안 걸려요! 먼저 뭐라고 불러드리면 좋을까요?';
       const dur = Math.min(600 + msg.length * 10, 1800);
       setIsTyping(true);
       const t3 = setTimeout(() => {
