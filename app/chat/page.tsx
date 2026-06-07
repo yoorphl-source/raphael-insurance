@@ -8,7 +8,6 @@ import { normalizeName, normalizeDOB, normalizePhone, extractNumber } from '@/ap
 // ── Types ─────────────────────────────────────────────────────
 
 type Step =
-  | 'consent'
   | 'name_input'
   | 'gender_buttons'
   | 'insurance_type'
@@ -77,7 +76,6 @@ function matchFAQ(text: string): string | null {
 
 function getProgress(step: Step): number {
   const map: Record<Step, number> = {
-    consent: 5,
     name_input: 10,
     gender_buttons: 16,
     insurance_type: 22,
@@ -104,7 +102,7 @@ export default function ChatPage() {
   type IntroPhase = 'visible' | 'fading' | 'gone';
   const [introPhase, setIntroPhase] = useState<IntroPhase>('visible');
 
-  const [step, setStep] = useState<Step>('consent');
+  const [step, setStep] = useState<Step>('name_input');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [textInput, setTextInput] = useState('');
@@ -126,28 +124,20 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // Intro → consent step
+  // Intro → first bot message
   useEffect(() => {
     const t1 = setTimeout(() => setIntroPhase('fading'), 700);
     const t2 = setTimeout(() => {
       setIntroPhase('gone');
-      // sendBotSequence is stable (only uses refs + setState), safe to call here
-      const msgs = [
-        '상담을 시작하기 전에 안내드려요. 입력해주신 정보는 보험 상담 목적으로만 사용되고 안전하게 보관됩니다.',
-        '[동의 안내문 — 확정 예정]',
-      ];
-      let delay = 0;
-      msgs.forEach((msg, i) => {
-        const dur = Math.min(600 + msg.length * 10, 1800);
-        const ta = setTimeout(() => setIsTyping(true), delay);
-        const tb = setTimeout(() => {
-          setIsTyping(false);
-          setMessages((prev) => [...prev, { id: ++msgId.current, from: 'bot', text: msg }]);
-          if (i === msgs.length - 1) setStep('consent');
-        }, delay + dur);
-        timers.current.push(ta, tb);
-        delay += dur + 250;
-      });
+      const msg = '안녕하세요, 보험 상담을 도와드리는 AI 도우미 라파엘이에요. 딱 맞는 보장을 찾아드리려고 몇 가지만 여쭤볼게요, 오래 안 걸려요. 먼저 뭐라고 불러드리면 좋을까요?';
+      const dur = Math.min(600 + msg.length * 10, 1800);
+      setIsTyping(true);
+      const t3 = setTimeout(() => {
+        setIsTyping(false);
+        setMessages([{ id: ++msgId.current, from: 'bot', text: msg }]);
+        setStep('name_input');
+      }, dur);
+      timers.current.push(t3);
     }, 1200);
     timers.current.push(t1, t2);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -174,13 +164,6 @@ export default function ChatPage() {
   }
 
   // ── Step handlers ─────────────────────────────────────────
-
-  function handleConsent() {
-    userSay('동의하고 시작하기');
-    sendBotSequence([
-      '안녕하세요, 보험 상담을 도와드리는 AI 도우미 라파엘이에요. 딱 맞는 보장을 찾아드리려고 몇 가지만 여쭤볼게요, 오래 안 걸려요. 먼저 뭐라고 불러드리면 좋을까요?',
-    ], 'name_input');
-  }
 
   function handleName() {
     if (!textInput.trim()) return;
@@ -446,17 +429,6 @@ export default function ChatPage() {
               isTyping ? 'pointer-events-none opacity-40' : ''
             }`}
           >
-            {step === 'consent' && (
-              <div className="flex justify-end">
-                <button
-                  onClick={handleConsent}
-                  className="rounded bg-[#1e3a5f] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#162d4a]"
-                >
-                  동의하고 시작하기
-                </button>
-              </div>
-            )}
-
             {step === 'name_input' && (
               <form onSubmit={(e) => { e.preventDefault(); handleName(); }} className="flex gap-2">
                 <input
