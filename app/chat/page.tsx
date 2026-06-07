@@ -8,6 +8,7 @@ import { normalizeName, normalizeDOB, normalizePhone, extractNumber } from '@/ap
 // ── Types ─────────────────────────────────────────────────────
 
 type Step =
+  | 'consent'
   | 'name_input'
   | 'gender_buttons'
   | 'insurance_type'
@@ -43,23 +44,19 @@ type CollectedData = {
 
 const POST_FAQ = [
   {
-    patterns: ['비용', '가격', '보험료', '얼마'],
-    answer: '[FAQ 답변 placeholder — 보험료 관련 안내]',
+    patterns: ['비용', '가격', '얼마', '무료', '유료', '상담비'],
+    answer: '상담은 무료이고 가입 의무도 없어요.',
   },
   {
-    patterns: ['언제', '연락', '기다'],
-    answer: '[FAQ 답변 placeholder — 연락 시기 관련 안내]',
+    patterns: ['가입', '의무', '필수', '꼭', '해야'],
+    answer: '전혀요. 비교만 보셔도 괜찮습니다.',
   },
   {
-    patterns: ['취소', '철회', '변경'],
-    answer: '[FAQ 답변 placeholder — 취소·변경 관련 안내]',
-  },
-  {
-    patterns: ['개인정보', '정보', '데이터', '보관'],
-    answer: '[FAQ 답변 placeholder — 개인정보 관련 안내]',
+    patterns: ['개인정보', '정보', '데이터', '보관', '안전'],
+    answer: '상담 안내 목적 외에는 사용하지 않고 안전하게 보관해요.',
   },
 ];
-const FAQ_FALLBACK = '자세한 내용은 배정된 상담사가 연락드려 안내드려요.';
+const FAQ_FALLBACK = '그 부분은 배정된 상담사가 자세히 안내드릴 거예요. 곧 연락드릴게요!';
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -69,7 +66,6 @@ function formatPhone(raw: string): string {
   if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`;
   return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
 }
-
 
 function matchFAQ(text: string): string | null {
   const lower = text.toLowerCase();
@@ -81,6 +77,7 @@ function matchFAQ(text: string): string | null {
 
 function getProgress(step: Step): number {
   const map: Record<Step, number> = {
+    consent: 5,
     name_input: 10,
     gender_buttons: 16,
     insurance_type: 22,
@@ -98,13 +95,16 @@ function getProgress(step: Step): number {
   return map[step] ?? 0;
 }
 
+const DOB_MSG =
+  '정확한 보험료와 보장을 안내드리려면 생년월일이 필요해요. 보험은 나이에 따라 조건이 달라지거든요. (예: 1990-01-01)';
+
 // ── Component ─────────────────────────────────────────────────
 
 export default function ChatPage() {
   type IntroPhase = 'visible' | 'fading' | 'gone';
   const [introPhase, setIntroPhase] = useState<IntroPhase>('visible');
 
-  const [step, setStep] = useState<Step>('name_input');
+  const [step, setStep] = useState<Step>('consent');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [textInput, setTextInput] = useState('');
@@ -126,21 +126,29 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // Intro → first bot message
+  // Intro → consent step
   useEffect(() => {
-    const t1 = setTimeout(() => setIntroPhase('fading'), 1500);
+    const t1 = setTimeout(() => setIntroPhase('fading'), 700);
     const t2 = setTimeout(() => {
       setIntroPhase('gone');
-      const msg = '안녕하세요, AI 도우미 라파엘이에요. 전문 상담사를 연결해 드리기 전에, 어떤 보장이 필요하신지 먼저 파악하려고 몇 가지만 여쭤볼게요. 오래 안 걸려요! 먼저 뭐라고 불러드리면 좋을까요?';
-      const dur = Math.min(600 + msg.length * 10, 1800);
-      setIsTyping(true);
-      const t3 = setTimeout(() => {
-        setIsTyping(false);
-        setMessages([{ id: ++msgId.current, from: 'bot', text: msg }]);
-        setStep('name_input');
-      }, dur);
-      timers.current.push(t3);
-    }, 2100);
+      // sendBotSequence is stable (only uses refs + setState), safe to call here
+      const msgs = [
+        '상담을 시작하기 전에 안내드려요. 입력해주신 정보는 보험 상담 목적으로만 사용되고 안전하게 보관됩니다.',
+        '[동의 안내문 — 확정 예정]',
+      ];
+      let delay = 0;
+      msgs.forEach((msg, i) => {
+        const dur = Math.min(600 + msg.length * 10, 1800);
+        const ta = setTimeout(() => setIsTyping(true), delay);
+        const tb = setTimeout(() => {
+          setIsTyping(false);
+          setMessages((prev) => [...prev, { id: ++msgId.current, from: 'bot', text: msg }]);
+          if (i === msgs.length - 1) setStep('consent');
+        }, delay + dur);
+        timers.current.push(ta, tb);
+        delay += dur + 250;
+      });
+    }, 1200);
     timers.current.push(t1, t2);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -167,19 +175,26 @@ export default function ChatPage() {
 
   // ── Step handlers ─────────────────────────────────────────
 
+  function handleConsent() {
+    userSay('동의하고 시작하기');
+    sendBotSequence([
+      '안녕하세요, 보험 상담을 도와드리는 AI 도우미 라파엘이에요. 딱 맞는 보장을 찾아드리려고 몇 가지만 여쭤볼게요, 오래 안 걸려요. 먼저 뭐라고 불러드리면 좋을까요?',
+    ], 'name_input');
+  }
+
   function handleName() {
     if (!textInput.trim()) return;
     setTextInput('');
     const name = normalizeName(textInput.trim());
     userSay(name);
     setData((d) => ({ ...d, name }));
-    sendBotSequence([`반갑습니다, ${name}님! 성별을 선택해주세요.`], 'gender_buttons');
+    sendBotSequence(['성별도 알려주시겠어요?'], 'gender_buttons');
   }
 
   function handleGender(gender: string) {
     userSay(gender);
     setData((d) => ({ ...d, gender }));
-    sendBotSequence([`${data.name}님, 어떤 보험이 궁금하세요?`], 'insurance_type');
+    sendBotSequence([`반가워요, ${data.name}님! 어떤 보험이 궁금하신가요? 편하게 골라주세요.`], 'insurance_type');
   }
 
   function handleInsuranceType(type: string) {
@@ -188,26 +203,26 @@ export default function ChatPage() {
 
     const intros: Record<string, string[]> = {
       '주택': [
-        '[주택보험 설명 placeholder]',
-        '도와드리기 위해 몇 가지 여쭤볼게요. 아파트와 일반 주택 중 어디에 거주하세요?',
+        '주택보험은 화재·누수처럼 예상치 못한 사고로부터 집과 가재도구의 손해를 보장하는 보험이에요. 주거 형태와 건물 조건에 따라 달라져서 몇 가지만 여쭤볼게요.',
+        '어떤 형태의 주거지인가요?',
       ],
       '운전자': [
-        '[운전자보험 설명 placeholder]',
-        '도와드리기 위해 몇 가지 여쭤볼게요. 자가용이신가요, 영업용 차량이신가요?',
+        '운전자보험은 자동차보험으로 채워지지 않는 운전 중 사고의 부담을 보완하는 보험이에요. 차량 용도와 종류에 따라 달라져서 몇 가지 확인할게요.',
+        '차량 용도가 어떻게 되나요?',
       ],
-      '암·질병(종합)': [
-        '[암·질병 종합보험 설명 placeholder]',
-        '정확한 견적 산출을 위해 생년월일이 필요해요. 8자리로 입력해주세요. (예: 19900101)',
+      '암·질병': [
+        '암·질병보험은 암 진단이나 입원·수술 등 큰 비용이 드는 상황에 대비하는 보장이에요. 나이와 조건에 따라 달라지니 생년월일을 먼저 여쭤볼게요.',
+        DOB_MSG,
       ],
       '자동차': [
-        '[자동차보험 설명 placeholder]',
-        '정확한 견적 산출을 위해 생년월일이 필요해요. 8자리로 입력해주세요. (예: 19900101)',
+        '자동차보험은 운전 중 사고로 인한 피해를 보장하는, 운전자에게 기본이 되는 보험이에요. 조건에 맞는 비교를 위해 몇 가지 여쭤볼게요.',
+        DOB_MSG,
       ],
     };
     const nextMap: Record<string, Step> = {
       '주택': 'housing_type',
       '운전자': 'driver_usage',
-      '암·질병(종합)': 'dob_input',
+      '암·질병': 'dob_input',
       '자동차': 'dob_input',
     };
     sendBotSequence(intros[type] ?? [], nextMap[type] ?? 'dob_input');
@@ -216,7 +231,7 @@ export default function ChatPage() {
   function handleHousingType(type: string) {
     userSay(type);
     setData((d) => ({ ...d, housingType: type }));
-    sendBotSequence(['거주하시는 평수를 알려주세요. (예: 25)'], 'housing_size');
+    sendBotSequence(['전용 면적은 대략 어느 정도인가요? (예: 25평)'], 'housing_size');
   }
 
   function handleHousingSize() {
@@ -226,7 +241,7 @@ export default function ChatPage() {
     const size = String(num);
     userSay(`${size}평`);
     setData((d) => ({ ...d, housingSize: size }));
-    sendBotSequence(['건물 준공 연도를 알려주세요. (예: 2010)'], 'housing_age');
+    sendBotSequence(['건물 연식은 어떻게 되나요? (예: 2010)'], 'housing_age');
   }
 
   function handleHousingAge() {
@@ -238,44 +253,36 @@ export default function ChatPage() {
     setData((d) => ({ ...d, housingAge: age }));
 
     if (data.housingType === '아파트') {
-      sendBotSequence(['단지 내 16층 이상 건물이 있나요?'], 'housing_floor');
+      sendBotSequence(['단지 안에 16층 이상 건물이 있나요?'], 'housing_floor');
     } else {
-      sendBotSequence([
-        '정확한 견적 산출을 위해 생년월일이 필요해요. 8자리로 입력해주세요. (예: 19900101)',
-      ], 'dob_input');
+      sendBotSequence([DOB_MSG], 'dob_input');
     }
   }
 
   function handleHousingFloor(answer: string) {
     userSay(answer);
     setData((d) => ({ ...d, housingHighFloor: answer }));
-    sendBotSequence([
-      '정확한 견적 산출을 위해 생년월일이 필요해요. 8자리로 입력해주세요. (예: 19900101)',
-    ], 'dob_input');
+    sendBotSequence([DOB_MSG], 'dob_input');
   }
 
   function handleDriverUsage(usage: string) {
     userSay(usage);
     setData((d) => ({ ...d, driverUsage: usage }));
-    sendBotSequence(['차종을 선택해주세요.'], 'driver_vehicle');
+    sendBotSequence(['차종을 골라주세요.'], 'driver_vehicle');
   }
 
   function handleDriverVehicle(vehicle: string) {
     userSay(vehicle);
     setData((d) => ({ ...d, driverVehicle: vehicle }));
-    const plans =
-      data.driverUsage === '자가용'
-        ? '[1만원 기본형 플랜 설명 placeholder] / [2만원 상해보장형 플랜 설명 placeholder]'
-        : '[2만원 기본형 플랜 설명 placeholder] / [3만원 상해보장형 플랜 설명 placeholder]';
-    sendBotSequence([`플랜을 선택해주세요.\n${plans}`], 'driver_plan');
+    sendBotSequence([
+      '보장 범위에 따라 플랜을 고르실 수 있어요. 어떤 쪽이 좋으세요?\n[플랜 설명 — 실제 상품 기준 입력 예정]',
+    ], 'driver_plan');
   }
 
   function handleDriverPlan(plan: string) {
     userSay(plan);
     setData((d) => ({ ...d, driverPlan: plan }));
-    sendBotSequence([
-      '정확한 견적 산출을 위해 생년월일이 필요해요. 8자리로 입력해주세요. (예: 19900101)',
-    ], 'dob_input');
+    sendBotSequence([DOB_MSG], 'dob_input');
   }
 
   function handleDOB() {
@@ -289,8 +296,7 @@ export default function ChatPage() {
     userSay(dob);
     setData((d) => ({ ...d, dob }));
     sendBotSequence([
-      '견적을 보내드리려면 연락처가 필요해요.',
-      '안전하게 보관되며, 상담 외 목적으로 사용되지 않습니다. 휴대폰 번호를 입력해주세요.',
+      '거의 끝났어요! 준비된 견적을 보내드릴 연락처를 남겨주세요. 상담 안내 외 용도로는 쓰이지 않고 안전하게 보관돼요.',
     ], 'phone_input');
   }
 
@@ -325,8 +331,8 @@ export default function ChatPage() {
     });
 
     sendBotSequence([
-      '확인 후 보험사 견적 정리해 연락드릴게요. 감사합니다!',
-      '추가로 궁금한 점이 있으시면 언제든 말씀해주세요.',
+      `감사합니다, ${data.name}님! 입력해주신 내용으로 여러 보험사 조건을 확인한 뒤, 담당 상담사가 정리해서 연락드릴게요. 잠시만 기다려 주세요.`,
+      '추가로 궁금하신 점이 있으시면 편하게 물어보세요.',
     ], 'done');
   }
 
@@ -365,7 +371,7 @@ export default function ChatPage() {
             </p>
             <p className="text-xl font-bold leading-snug text-white sm:text-2xl">
               전문 AI 도우미<br />
-              <span className="text-blue-300">'라파엘 보험 도우미'</span>가<br />
+              <span className="text-blue-300">'라파엘'</span>이<br />
               배정되었습니다
             </p>
             <p className="mt-5 text-xs text-blue-300">
@@ -440,6 +446,17 @@ export default function ChatPage() {
               isTyping ? 'pointer-events-none opacity-40' : ''
             }`}
           >
+            {step === 'consent' && (
+              <div className="flex justify-end">
+                <button
+                  onClick={handleConsent}
+                  className="rounded bg-[#1e3a5f] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#162d4a]"
+                >
+                  동의하고 시작하기
+                </button>
+              </div>
+            )}
+
             {step === 'name_input' && (
               <form onSubmit={(e) => { e.preventDefault(); handleName(); }} className="flex gap-2">
                 <input
@@ -473,7 +490,7 @@ export default function ChatPage() {
 
             {step === 'insurance_type' && (
               <div className="grid grid-cols-2 gap-2">
-                {['주택', '암·질병(종합)', '운전자', '자동차'].map((t) => (
+                {['주택', '암·질병', '운전자', '자동차'].map((t) => (
                   <button key={t} onClick={() => handleInsuranceType(t)}
                     className="rounded border border-gray-300 py-2.5 text-sm font-medium text-gray-700 transition hover:border-[#1e3a5f] hover:text-[#1e3a5f]">
                     {t}
@@ -495,11 +512,11 @@ export default function ChatPage() {
 
             {step === 'housing_size' && (
               <form onSubmit={(e) => { e.preventDefault(); handleHousingSize(); }} className="flex gap-2">
-                <input autoFocus type="number" min="1" value={textInput}
+                <input autoFocus type="text" inputMode="numeric" value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="평수 입력 (예: 25)"
+                  placeholder="예: 25, 30평, 25평형"
                   className="flex-1 rounded border border-gray-300 px-4 py-2.5 text-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]" />
-                <button type="submit" disabled={!textInput.trim()}
+                <button type="submit" disabled={extractNumber(textInput) === null}
                   className="rounded bg-[#1e3a5f] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#162d4a] disabled:opacity-40">
                   전송
                 </button>
@@ -508,11 +525,11 @@ export default function ChatPage() {
 
             {step === 'housing_age' && (
               <form onSubmit={(e) => { e.preventDefault(); handleHousingAge(); }} className="flex gap-2">
-                <input autoFocus type="number" min="1900" max={new Date().getFullYear()} value={textInput}
+                <input autoFocus type="text" inputMode="numeric" value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="준공 연도 (예: 2010)"
+                  placeholder="예: 2010, 2015년식"
                   className="flex-1 rounded border border-gray-300 px-4 py-2.5 text-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]" />
-                <button type="submit" disabled={!textInput.trim()}
+                <button type="submit" disabled={extractNumber(textInput) === null}
                   className="rounded bg-[#1e3a5f] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#162d4a] disabled:opacity-40">
                   전송
                 </button>
@@ -543,7 +560,7 @@ export default function ChatPage() {
 
             {step === 'driver_vehicle' && (
               <div className="grid grid-cols-2 gap-2">
-                {['승용', '승합', '화물', '기타'].map((v) => (
+                {['승용차', '승합차', '화물차', '기타'].map((v) => (
                   <button key={v} onClick={() => handleDriverVehicle(v)}
                     className="rounded border border-gray-300 py-2.5 text-sm font-medium text-gray-700 transition hover:border-[#1e3a5f] hover:text-[#1e3a5f]">
                     {v}
