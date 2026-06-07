@@ -10,6 +10,7 @@ export async function submitLead(data: {
   name: string;
   phone: string;
   product: string;
+  method: string;
   message: string;
   consent: boolean;
 }): Promise<SubmitResult> {
@@ -19,6 +20,7 @@ export async function submitLead(data: {
     name: data.name,
     phone: data.phone,
     product: data.product || null,
+    method: data.method,
     message: data.message || null,
     consent: data.consent,
   });

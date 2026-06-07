@@ -1,6 +1,5 @@
 import ConsultForm from './components/ConsultForm';
 import { FAQItem } from './components/FAQItem';
-import { ChatWidget } from './components/ChatWidget';
 
 const STEPS = [
   {
@@ -155,9 +154,6 @@ export default function Home() {
 
       {/* ── Form ── */}
       <ConsultForm />
-
-      {/* ── Chat widget ── */}
-      <ChatWidget />
 
       {/* ── Footer ── */}
       <footer className="bg-gray-900 px-6 py-10 text-sm text-gray-400">

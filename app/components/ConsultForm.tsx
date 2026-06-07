@@ -19,6 +19,7 @@ export default function ConsultForm() {
   const [phone, setPhone] = useState('');
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [insurance, setInsurance] = useState('');
+  const [method, setMethod] = useState<'전화' | '채팅'>('전화');
   const [inquiry, setInquiry] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [policyOpen, setPolicyOpen] = useState(false);
@@ -42,6 +43,7 @@ export default function ConsultForm() {
         name: name.trim(),
         phone,
         product: insurance,
+        method,
         message: inquiry.trim(),
         consent: agreed,
       });
@@ -138,6 +140,35 @@ export default function ConsultForm() {
                 <option key={opt} value={opt}>{opt}보험</option>
               ))}
             </select>
+          </div>
+
+          {/* 상담 방법 */}
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-gray-700">
+              상담 방법 <span className="text-[#1e3a5f]">*</span>
+            </p>
+            <div className="flex gap-3">
+              {(['전화', '채팅'] as const).map((opt) => (
+                <label
+                  key={opt}
+                  className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded border py-2.5 text-sm font-medium transition ${
+                    method === opt
+                      ? 'border-[#1e3a5f] bg-[#1e3a5f] text-white'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-[#1e3a5f] hover:text-[#1e3a5f]'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="method"
+                    value={opt}
+                    checked={method === opt}
+                    onChange={() => setMethod(opt)}
+                    className="sr-only"
+                  />
+                  {opt === '전화' ? '📞 전화 상담' : '💬 채팅 상담'}
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* 문의 내용 */}
