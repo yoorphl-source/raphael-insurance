@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { submitChatLead } from '@/app/actions/submitChatLead';
+import { normalizeName, normalizeDOB, normalizePhone, extractNumber } from '@/app/lib/normalizers';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -69,12 +70,6 @@ function formatPhone(raw: string): string {
   return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
 }
 
-function formatDOB(raw: string): string {
-  const d = raw.replace(/\D/g, '').slice(0, 8);
-  if (d.length <= 4) return d;
-  if (d.length <= 6) return `${d.slice(0, 4)}-${d.slice(4)}`;
-  return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6)}`;
-}
 
 function matchFAQ(text: string): string | null {
   const lower = text.toLowerCase();
@@ -173,9 +168,9 @@ export default function ChatPage() {
   // ── Step handlers ─────────────────────────────────────────
 
   function handleName() {
-    const name = textInput.trim();
-    if (!name) return;
+    if (!textInput.trim()) return;
     setTextInput('');
+    const name = normalizeName(textInput.trim());
     userSay(name);
     setData((d) => ({ ...d, name }));
     sendBotSequence([`반갑습니다, ${name}님! 성별을 선택해주세요.`], 'gender_buttons');
@@ -225,18 +220,20 @@ export default function ChatPage() {
   }
 
   function handleHousingSize() {
-    const size = textInput.trim();
-    if (!size) return;
+    const num = extractNumber(textInput.trim());
+    if (num === null) return;
     setTextInput('');
+    const size = String(num);
     userSay(`${size}평`);
     setData((d) => ({ ...d, housingSize: size }));
     sendBotSequence(['건물 준공 연도를 알려주세요. (예: 2010)'], 'housing_age');
   }
 
   function handleHousingAge() {
-    const age = textInput.trim();
-    if (!age) return;
+    const num = extractNumber(textInput.trim());
+    if (num === null) return;
     setTextInput('');
+    const age = String(num);
     userSay(`${age}년`);
     setData((d) => ({ ...d, housingAge: age }));
 
@@ -282,8 +279,12 @@ export default function ChatPage() {
   }
 
   function handleDOB() {
-    const dob = textInput.trim();
-    if (dob.replace(/\D/g, '').length < 8) return;
+    const dob = normalizeDOB(textInput.trim());
+    if (!dob) {
+      setTextInput('');
+      sendBotSequence(['생년월일을 다시 입력해 주시겠어요?']);
+      return;
+    }
     setTextInput('');
     userSay(dob);
     setData((d) => ({ ...d, dob }));
@@ -293,11 +294,9 @@ export default function ChatPage() {
     ], 'phone_input');
   }
 
-  const PHONE_RE = /^010-\d{4}-\d{4}$/;
-
   function handlePhone() {
-    const phone = textInput.trim();
-    if (!PHONE_RE.test(phone)) return;
+    const phone = normalizePhone(textInput.trim());
+    if (!phone) return;
     setTextInput('');
     userSay(phone);
     setData((d) => ({ ...d, phone }));
@@ -567,10 +566,10 @@ export default function ChatPage() {
             {step === 'dob_input' && (
               <form onSubmit={(e) => { e.preventDefault(); handleDOB(); }} className="flex gap-2">
                 <input autoFocus type="text" inputMode="numeric" value={textInput}
-                  onChange={(e) => setTextInput(formatDOB(e.target.value))}
-                  placeholder="생년월일 (예: 1990-01-01)"
+                  onChange={(e) => setTextInput(e.target.value)}
+                  placeholder="예: 19900101, 1990-01-01, 1990년 1월 1일"
                   className="flex-1 rounded border border-gray-300 px-4 py-2.5 text-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]" />
-                <button type="submit" disabled={textInput.replace(/\D/g, '').length < 8}
+                <button type="submit" disabled={normalizeDOB(textInput) === null}
                   className="rounded bg-[#1e3a5f] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#162d4a] disabled:opacity-40">
                   전송
                 </button>
@@ -590,7 +589,7 @@ export default function ChatPage() {
                     onChange={(e) => setTextInput(formatPhone(e.target.value))}
                     placeholder="010-0000-0000"
                     className="flex-1 rounded border border-gray-300 px-4 py-2.5 text-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-1 focus:ring-[#1e3a5f]" />
-                  <button type="submit" disabled={!PHONE_RE.test(textInput)}
+                  <button type="submit" disabled={normalizePhone(textInput) === null}
                     className="rounded bg-[#1e3a5f] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#162d4a] disabled:opacity-40">
                     전송
                   </button>
