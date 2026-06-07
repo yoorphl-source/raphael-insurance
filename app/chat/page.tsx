@@ -339,7 +339,10 @@ export default function ChatPage() {
   // ── Render ────────────────────────────────────────────────
 
   return (
-    <div className="flex h-dvh flex-col bg-gray-50 font-sans">
+    <div
+      className="flex flex-col overflow-hidden bg-gray-50 font-sans"
+      style={{ height: '100dvh' }}
+    >
 
       {/* ── 진입 오버레이 ── */}
       {introPhase !== 'gone' && (
@@ -417,13 +420,16 @@ export default function ChatPage() {
             </div>
           )}
 
-          <div ref={bottomRef} />
+          <div ref={bottomRef} className="h-1" />
         </div>
       </main>
 
       {/* ── Input area ── */}
       {introPhase === 'gone' && (
-        <div className="shrink-0 border-t border-gray-200 bg-white px-3 py-3 sm:px-4 sm:py-4">
+        <div
+          className="shrink-0 border-t border-gray-200 bg-white px-3 pt-3 sm:px-4 sm:pt-4"
+          style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+        >
           <div
             className={`mx-auto max-w-2xl space-y-2 transition-opacity duration-200 ${
               isTyping ? 'pointer-events-none opacity-40' : ''

@@ -123,13 +123,30 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 고객 리뷰 (마퀴) ── */}
-      <section className="overflow-x-hidden border-b border-gray-100 bg-white py-12 sm:py-16">
-        <div className="mx-auto mb-8 max-w-5xl px-6">
+      {/* ── 고객 리뷰 ── */}
+      <section className="border-b border-gray-100 bg-white py-12 sm:py-16">
+        <div className="mx-auto mb-8 max-w-5xl px-4 sm:px-6">
           <h2 className="text-xl font-bold text-gray-900">고객 후기</h2>
         </div>
 
-        <div className="overflow-hidden">
+        {/* 모바일: 터치 스와이프 */}
+        <div className="review-swipe lg:hidden">
+          {REVIEWS.map((r, i) => (
+            <div
+              key={i}
+              className="w-72 shrink-0 snap-start rounded-xl border border-gray-200 bg-white p-5"
+            >
+              <p className="text-xs tracking-widest text-[#1e3a5f]">★★★★★</p>
+              <p className="mt-3 text-sm leading-relaxed text-gray-700">{r.text}</p>
+              <p className="mt-4 border-t border-gray-100 pt-3 text-xs text-gray-400">
+                {r.author}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* 데스크톱: 자동 마퀴 */}
+        <div className="hidden overflow-hidden lg:block">
           <div
             className="marquee-track flex gap-4"
             aria-label="고객 후기 슬라이드"

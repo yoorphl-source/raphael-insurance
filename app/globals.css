@@ -30,3 +30,18 @@ body {
     animation: none;
   }
 }
+
+/* Mobile review swipe container */
+.review-swipe {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 1rem;
+  -webkit-overflow-scrolling: touch;
+  gap: 1rem;
+  padding: 0 1rem;
+  scrollbar-width: none;
+}
+.review-swipe::-webkit-scrollbar {
+  display: none;
+}
