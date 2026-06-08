@@ -331,7 +331,7 @@ export default function LandingPage({
         <p className="mb-6 text-[13px] text-neutral-500">여러 보험사 상품을 비교해 안내해 드립니다.</p>
         </div>
         <div className="overflow-hidden">
-          <div className="flex w-max gap-6" style={{ animation: 'kp-marquee 45s linear infinite' }}>
+          <div className="flex w-max gap-6" style={{ animation: 'kp-marquee 65s linear infinite' }}>
             {partnersLoop.map((src, i) => (
               <div key={i} className="flex h-[72px] w-[140px] shrink-0 items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
