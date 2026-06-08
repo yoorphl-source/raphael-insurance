@@ -373,7 +373,7 @@ export default function LandingPage({
             <input value={ph} onChange={(e) => setPh(e.target.value)} type="tel" placeholder="010-0000-0000" className="w-full rounded border border-neutral-300 px-3.5 py-3 text-[14px]" />
 
             <label className="mb-1.5 mt-[1.15rem] block text-[13px] font-semibold">생년월일<span className="ml-1 text-[11px] font-normal text-neutral-400">선택</span></label>
-            <input value={birth} onChange={(e) => setBirth(e.target.value)} type="date" className="w-full rounded border border-neutral-300 px-3.5 py-3 text-[14px] text-neutral-700" />
+            <input value={birth} onChange={(e) => setBirth(e.target.value)} type="text" placeholder="예: 1990-01-01" className="w-full rounded border border-neutral-300 px-3.5 py-3 text-[14px]" />
 
             <label className="mb-1.5 mt-[1.15rem] block text-[13px] font-semibold">관심 보장<span className="ml-1 text-[11px] font-normal text-neutral-400">선택 · 복수 가능</span></label>
             <div className="flex flex-wrap gap-2">
