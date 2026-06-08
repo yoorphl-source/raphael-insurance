@@ -248,7 +248,7 @@ export default function LandingPage({
               {ctaText}
             </button>
             <div className="mt-6 flex flex-wrap gap-4">
-              {['상담료 무료', '가입 강요 없음', '평일 당일 연락'].map((t) => (
+              {['상담료 무료', '1대1 맞춤 상담', '1영업일 이내 연락'].map((t) => (
                 <span key={t} className="flex items-center gap-1.5 text-[12px] text-white/75">
                   <span className="text-[#7FA8D8]">✓</span>{t}
                 </span>
@@ -297,7 +297,7 @@ export default function LandingPage({
           >
             내 보장 무료로 점검받기 →
           </button>
-          <p className="mt-2 text-[11px] text-neutral-400">상담료 없음 · 평일 신청 시 당일 연락</p>
+          <p className="mt-2 text-[11px] text-neutral-400">상담료 없음 · 1대1 맞춤 상담</p>
         </div>
         </div>
       </section>
@@ -375,13 +375,13 @@ export default function LandingPage({
         <div className="mb-4 h-[3px] w-[34px] bg-[#1B3357]" />
         <div className="mb-5 flex items-center gap-2 rounded-lg bg-[#EDF1F7] px-4 py-2.5">
           <span className="text-[16px]">📞</span>
-          <p className="text-[12px] font-semibold text-[#15294A]">평일 신청 시 당일 연락드립니다</p>
+          <p className="text-[12px] font-semibold text-[#15294A]">1영업일 이내 연락드립니다</p>
         </div>
 
         {status === 'done' ? (
           <div className="rounded border border-neutral-300 bg-white p-8 text-center">
             <p className="mb-2 text-[17px] font-bold text-[#15294A]">신청이 완료되었습니다</p>
-            <p className="text-[13px] leading-relaxed text-neutral-500">평일 기준 당일 연락드리겠습니다. 감사합니다.</p>
+            <p className="text-[13px] leading-relaxed text-neutral-500">1영업일 이내 연락드리겠습니다. 감사합니다.</p>
           </div>
         ) : (
           <div className="rounded border border-neutral-300 bg-white p-6">
