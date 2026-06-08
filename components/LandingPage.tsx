@@ -33,7 +33,13 @@ const DEFAULT_REVIEWS: Review[] = [
   { quote: '자녀 보험을 알아보다 상담받았는데, 필요한 것만 추려주셔서 결정이 쉬웠습니다.', by: '박○○ · 30대 학부모' },
 ]
 
-const DEFAULT_PARTNERS = ['보험사 로고', '보험사 로고', '보험사 로고', '보험사 로고', '보험사 로고']
+const DEFAULT_PARTNERS = [
+  '/logos/logo01.png', '/logos/logo02.png', '/logos/logo03.png', '/logos/logo04.png',
+  '/logos/logo05.png', '/logos/logo06.png', '/logos/logo07.png', '/logos/logo08.png',
+  '/logos/logo09.png', '/logos/logo10.png', '/logos/logo11.png', '/logos/logo12.png',
+  '/logos/logo13.png', '/logos/logo14.png', '/logos/logo15.png', '/logos/logo16.png',
+  '/logos/logo17.png', '/logos/logo18.png', '/logos/logo19.png', '/logos/logo20.png',
+]
 
 const DEFAULT_FAQS: Faq[] = [
   { q: '상담은 정말 무료인가요?', a: '네, 상담료는 전혀 없습니다. 보장분석과 비교 안내까지 모두 무료로 진행되며, 가입 여부는 전적으로 고객님이 결정하십니다.' },
@@ -326,9 +332,10 @@ export default function LandingPage({
         </div>
         <div className="overflow-hidden">
           <div className="flex w-max gap-3.5" style={{ animation: 'kp-marquee 22s linear infinite' }}>
-            {partnersLoop.map((nm, i) => (
-              <div key={i} className="flex h-[88px] w-[168px] shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-white text-[13px] text-neutral-400">
-                {nm}
+            {partnersLoop.map((src, i) => (
+              <div key={i} className="flex h-[88px] w-[168px] shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-white p-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="보험사 로고" className="max-h-full max-w-full object-contain" />
               </div>
             ))}
           </div>
