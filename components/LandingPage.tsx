@@ -228,10 +228,10 @@ export default function LandingPage({
           onClick={() => scrollTo('form-anchor')}
           className={[
             'justify-self-end col-start-3 rounded px-3.5 py-2 text-[11px] font-semibold transition-colors',
-            scrolled ? 'bg-[#1B3357] text-white' : 'border border-white/40 text-white',
+            scrolled ? 'bg-[#1B3357] text-white' : 'text-white',
           ].join(' ')}
         >
-          보험비교/분석
+          비교/분석
         </button>
       </header>
 
