@@ -248,7 +248,7 @@ export default function LandingPage({
               {ctaText}
             </button>
             <div className="mt-6 flex flex-wrap gap-4">
-              {['상담료 무료', '가입 강요 없음', '1:1 전담 상담'].map((t) => (
+              {['상담료 무료', '가입 강요 없음', '평일 당일 연락'].map((t) => (
                 <span key={t} className="flex items-center gap-1.5 text-[12px] text-white/75">
                   <span className="text-[#7FA8D8]">✓</span>{t}
                 </span>
@@ -289,6 +289,15 @@ export default function LandingPage({
               <span className="absolute bottom-3 right-3.5 text-[15px] font-bold text-[#1B3357]">→</span>
             </button>
           ))}
+        </div>
+        <div className="mt-8 text-center">
+          <button
+            onClick={() => scrollTo('form-anchor')}
+            className="rounded-lg bg-[#15294A] px-8 py-3.5 text-[14px] font-bold text-white"
+          >
+            내 보장 무료로 점검받기 →
+          </button>
+          <p className="mt-2 text-[11px] text-neutral-400">상담료 없음 · 평일 신청 시 당일 연락</p>
         </div>
         </div>
       </section>
@@ -364,12 +373,15 @@ export default function LandingPage({
         <div className="mx-auto max-w-lg">
         <h2 className="mb-2 text-[21px] font-bold -tracking-[0.015em]">상담 요청</h2>
         <div className="mb-4 h-[3px] w-[34px] bg-[#1B3357]" />
-        <p className="mb-6 text-[13px] text-neutral-500">신청 후 1영업일 이내 연락드립니다.</p>
+        <div className="mb-5 flex items-center gap-2 rounded-lg bg-[#EDF1F7] px-4 py-2.5">
+          <span className="text-[16px]">📞</span>
+          <p className="text-[12px] font-semibold text-[#15294A]">평일 신청 시 당일 연락드립니다</p>
+        </div>
 
         {status === 'done' ? (
           <div className="rounded border border-neutral-300 bg-white p-8 text-center">
             <p className="mb-2 text-[17px] font-bold text-[#15294A]">신청이 완료되었습니다</p>
-            <p className="text-[13px] leading-relaxed text-neutral-500">1영업일 이내에 연락드리겠습니다. 감사합니다.</p>
+            <p className="text-[13px] leading-relaxed text-neutral-500">평일 기준 당일 연락드리겠습니다. 감사합니다.</p>
           </div>
         ) : (
           <div className="rounded border border-neutral-300 bg-white p-6">
@@ -379,36 +391,10 @@ export default function LandingPage({
             <label className="mb-1.5 mt-[1.15rem] block text-[13px] font-semibold">연락처<span className="ml-1 text-[11px] font-normal text-red-600">필수</span></label>
             <input value={ph} onChange={(e) => setPh(e.target.value)} type="tel" placeholder="010-0000-0000" className="w-full rounded border border-neutral-300 px-3.5 py-3 text-[14px]" />
 
-            <label className="mb-1.5 mt-[1.15rem] block text-[13px] font-semibold">생년월일<span className="ml-1 text-[11px] font-normal text-neutral-400">선택</span></label>
-            <input value={birth} onChange={(e) => setBirth(e.target.value)} type="text" placeholder="예: 1990-01-01" className="w-full rounded border border-neutral-300 px-3.5 py-3 text-[14px]" />
-
-            <label className="mb-1.5 mt-[1.15rem] block text-[13px] font-semibold">관심 보장<span className="ml-1 text-[11px] font-normal text-neutral-400">선택 · 복수 가능</span></label>
-            <div className="flex flex-wrap gap-2">
-              {INTERESTS.map((v) => {
-                const on = picked.includes(v)
-                return (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => togglePick(v)}
-                    className={[
-                      'rounded-full border px-4 py-2 text-[13px] font-medium transition-colors',
-                      on ? 'border-[#15294A] bg-[#15294A] text-white' : 'border-neutral-300 bg-white text-neutral-600',
-                    ].join(' ')}
-                  >
-                    {v}
-                  </button>
-                )
-              })}
-            </div>
-
-            <label className="mb-1.5 mt-[1.15rem] block text-[13px] font-semibold">문의 내용<span className="ml-1 text-[11px] font-normal text-neutral-400">선택</span></label>
-            <input value={msg} onChange={(e) => setMsg(e.target.value)} type="text" placeholder="예: 실손보험 중복 여부 확인하고 싶어요" className="w-full rounded border border-neutral-300 px-3.5 py-3 text-[14px]" />
-
             <div className="my-[1.15rem] rounded bg-neutral-50 p-3.5">
               <p className="mb-2.5 text-[11px] leading-[1.75] text-neutral-500">
                 [필수] 개인정보 수집·이용 동의<br />
-                수집 항목: 이름, 연락처, 생년월일, 관심 보장 | 목적: 보험 상담 연락 | 보유 기간: 상담 종료 후 즉시 파기
+                수집 항목: 이름, 연락처 | 목적: 보험 상담 연락 | 보유 기간: 상담 종료 후 즉시 파기
               </p>
               <label className="flex items-start gap-2 text-[12px]">
                 <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#15294A]" />
