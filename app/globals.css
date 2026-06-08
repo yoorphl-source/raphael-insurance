@@ -10,6 +10,7 @@ body {
   background: #ffffff;
   overflow-x: hidden; /* prevent horizontal scroll from any overflowing child */
   max-width: 100%;
+  scrollbar-gutter: stable; /* reserve scrollbar space to prevent layout shift on modal open */
 }
 
 @keyframes marquee {
