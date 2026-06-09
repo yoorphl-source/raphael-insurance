@@ -91,7 +91,7 @@ export default function LandingPage({
   label = '무료 보장분석 서비스',
   headline = '내 보험, 제대로\n비교하고 계신가요?',
   sub = '여러 보험사 상품을 한 번에 비교·분석해\n지금 가장 합리적인 선택을 찾아드립니다.',
-  ctaText = '무료 분석 신청하기',
+  ctaText = '무료 비교/분석 신청하기',
   reviews = DEFAULT_REVIEWS,
   partners = DEFAULT_PARTNERS,
   faqs = DEFAULT_FAQS,
@@ -197,8 +197,8 @@ export default function LandingPage({
       {/* ════ 스크롤 반응형 고정 헤더 ════ */}
       <header
         className={[
-          'fixed inset-x-0 top-0 z-30 flex items-center justify-center px-5 py-3.5 transition-all duration-300',
-          scrolled ? 'bg-white border-b border-neutral-200 shadow-sm' : 'bg-[#15294A]',
+          'fixed inset-x-0 top-0 z-30 flex items-center justify-center px-5 py-2 transition-all duration-300',
+          scrolled ? 'bg-white border-b border-neutral-200' : 'bg-[#15294A]',
         ].join(' ')}
       >
         <span className={`text-[18px] font-bold tracking-wide ${scrolled ? 'text-[#1B3357]' : 'text-white'}`}>
@@ -329,7 +329,6 @@ export default function LandingPage({
 
       {/* ════ 푸터 (매트 블랙) ════ */}
       <footer className="bg-[#111114] px-6 py-8">
-        <div className="mx-auto max-w-5xl">
         <div className="mb-2.5 text-[14px] font-bold tracking-[0.04em] text-white">KPARTNERS</div>
         <p className="text-[11px] leading-[1.9] text-neutral-500">
           상호: 케이파트너스 | 대표: 장현 | 소속: MICASSET<br />
@@ -338,7 +337,6 @@ export default function LandingPage({
           준법감시인 확인필 제2026-0000호<br /><br />
           본 페이지는 보험 모집인의 광고 자료이며, 수집된 개인정보는 상담 연락 외의 목적으로 사용·제공되지 않습니다.
         </p>
-        </div>
       </footer>
 
       {/* ════ 플로팅 CTA ════ */}
@@ -356,7 +354,7 @@ export default function LandingPage({
       {/* ════ 상담 신청 모달 ════ */}
       {formOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6"
+          className="fixed inset-0 z-50 flex items-end justify-center pb-0"
           style={{
             background: 'rgba(8,15,30,0.6)',
             backdropFilter: 'blur(6px)',
@@ -367,7 +365,7 @@ export default function LandingPage({
           aria-modal="true"
         >
           <div
-            className="w-full max-w-lg rounded-t-[28px] bg-white sm:rounded-[28px]"
+            className="w-full max-w-lg rounded-t-[28px] bg-white"
             style={{ animation: `${formClosing ? 'kp-sheet-out' : 'kp-sheet-in'} 0.28s cubic-bezier(0.32,0.72,0,1) both` }}
           >
             {/* 드래그 핸들 */}
