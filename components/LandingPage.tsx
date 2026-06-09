@@ -86,8 +86,6 @@ const CONCERNS = [
   },
 ] as const
 
-const INTERESTS = ['실손', '암', '간병', '기타']
-
 export default function LandingPage({
   source,
   label = '무료 보장분석 서비스',
@@ -103,21 +101,12 @@ export default function LandingPage({
 
   /* ── 스크롤 반응형 헤더 ── */
   const [scrolled, setScrolled] = useState(false)
-  const [hideHeader, setHideHeader] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 40)
-      const form = document.getElementById('form-anchor')
-      if (form) setHideHeader(form.getBoundingClientRect().top <= 72)
-    }
+    const onScroll = () => setScrolled(window.scrollY > 40)
     window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
-
-  const scrollTo = (id: string) =>
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
 
   /* ── 경각심 팝업 ── */
   const [openKey, setOpenKey] = useState<string | null>(null)
@@ -126,32 +115,34 @@ export default function LandingPage({
 
   function closePopup(cb?: () => void) {
     setClosing(true)
-    setTimeout(() => {
-      setOpenKey(null)
-      setClosing(false)
-      cb?.()
-    }, 180)
+    setTimeout(() => { setOpenKey(null); setClosing(false); cb?.() }, 180)
+  }
+
+  /* ── 상담 신청 모달 ── */
+  const [formOpen, setFormOpen] = useState(false)
+  const [formClosing, setFormClosing] = useState(false)
+
+  function openFormModal() { setFormOpen(true) }
+  function closeFormModal() {
+    setFormClosing(true)
+    setTimeout(() => { setFormOpen(false); setFormClosing(false) }, 260)
   }
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closePopup() }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { if (formOpen) closeFormModal(); else closePopup() }
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [formOpen, openKey])
+
   useEffect(() => {
-    if (openKey) {
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
-      document.body.style.overflow = 'hidden'
-      document.body.style.paddingRight = `${scrollbarWidth}px`
-    } else {
-      document.body.style.overflow = ''
-      document.body.style.paddingRight = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-      document.body.style.paddingRight = ''
-    }
-  }, [openKey])
+    const locked = !!(openKey || formOpen)
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+    document.body.style.overflow = locked ? 'hidden' : ''
+    document.body.style.paddingRight = locked ? `${scrollbarWidth}px` : ''
+    return () => { document.body.style.overflow = ''; document.body.style.paddingRight = '' }
+  }, [openKey, formOpen])
 
   /* ── 후기 자동 슬라이드 ── */
   const trackRef = useRef<HTMLDivElement>(null)
@@ -176,27 +167,14 @@ export default function LandingPage({
   /* ── 상담 폼 ── */
   const [name, setName] = useState('')
   const [ph, setPh] = useState('')
-  const [birth, setBirth] = useState('')
-  const [picked, setPicked] = useState<string[]>([])
-  const [msg, setMsg] = useState('')
   const [agreed, setAgreed] = useState(false)
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
-
-  const togglePick = (v: string) =>
-    setPicked((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]))
 
   async function handleSubmit() {
     if (!name.trim() || !ph.trim()) { alert('이름과 연락처를 입력해 주세요.'); return }
     if (!agreed) { alert('개인정보 수집·이용에 동의해 주세요.'); return }
     setStatus('sending')
-    const result = await submitLandingLead({
-      name,
-      phone: ph,
-      birth: birth || null,
-      interests: picked.join(',') || null,
-      message: msg || null,
-      source,
-    })
+    const result = await submitLandingLead({ name, phone: ph, birth: null, interests: null, message: null, source })
     if (!result.ok) { console.error(result.error); setStatus('error') }
     else setStatus('done')
   }
@@ -204,35 +182,28 @@ export default function LandingPage({
   const partnersLoop = [...partners, ...partners]
 
   return (
-    <div className="font-sans text-[15px] leading-relaxed antialiased text-neutral-900">
+    <div className="font-sans text-[15px] leading-relaxed antialiased text-neutral-900 pb-[76px]">
       <style>{`
         @keyframes kp-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
         @keyframes kp-fade-in{from{opacity:0}to{opacity:1}}
         @keyframes kp-fade-out{from{opacity:1}to{opacity:0}}
         @keyframes kp-scale-in{from{opacity:0;transform:scale(0.95) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
         @keyframes kp-scale-out{from{opacity:1;transform:scale(1) translateY(0)}to{opacity:0;transform:scale(0.95) translateY(6px)}}
+        @keyframes kp-sheet-in{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        @keyframes kp-sheet-out{from{transform:translateY(0)}to{transform:translateY(100%)}}
+        @keyframes kp-check{0%{stroke-dashoffset:40}100%{stroke-dashoffset:0}}
       `}</style>
 
       {/* ════ 스크롤 반응형 고정 헤더 ════ */}
       <header
         className={[
-          'fixed inset-x-0 top-0 z-30 grid grid-cols-[1fr_auto_1fr] items-center px-5 py-3.5 transition-all duration-300',
-          hideHeader ? '-translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100',
+          'fixed inset-x-0 top-0 z-30 flex items-center justify-center px-5 py-3.5 transition-all duration-300',
           scrolled ? 'bg-white border-b border-neutral-200 shadow-sm' : 'bg-[#15294A]',
         ].join(' ')}
       >
-        <span className={`justify-self-center col-start-2 text-[18px] font-bold tracking-wide ${scrolled ? 'text-[#1B3357]' : 'text-white'}`}>
+        <span className={`text-[18px] font-bold tracking-wide ${scrolled ? 'text-[#1B3357]' : 'text-white'}`}>
           KPARTNERS
         </span>
-        <button
-          onClick={() => scrollTo('form-anchor')}
-          className={[
-            'justify-self-end col-start-3 rounded px-3.5 py-2 text-[11px] font-semibold transition-colors',
-            scrolled ? 'bg-[#1B3357] text-white' : 'text-white',
-          ].join(' ')}
-        >
-          비교/분석
-        </button>
       </header>
 
       {/* ════ 1. 히어로 (텍스트 + 우측 이미지) ════ */}
@@ -244,10 +215,7 @@ export default function LandingPage({
               {headline}
             </h1>
             <p className="mb-7 whitespace-pre-line text-[14px] leading-[1.85] text-white/70 md:text-[15px]">{sub}</p>
-            <button onClick={() => scrollTo('form-anchor')} className="rounded bg-white px-7 py-3.5 text-[15px] font-bold text-[#15294A]">
-              {ctaText}
-            </button>
-            <div className="mt-6 flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4">
               {['상담료 무료', '1대1 맞춤 상담', '1영업일 이내 연락'].map((t) => (
                 <span key={t} className="flex items-center gap-1.5 text-[12px] text-white/75">
                   <span className="text-[#7FA8D8]">✓</span>{t}
@@ -289,15 +257,6 @@ export default function LandingPage({
               <span className="absolute bottom-3 right-3.5 text-[15px] font-bold text-[#1B3357]">→</span>
             </button>
           ))}
-        </div>
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => scrollTo('form-anchor')}
-            className="rounded-lg bg-[#15294A] px-8 py-3.5 text-[14px] font-bold text-white"
-          >
-            내 보장 무료로 점검받기 →
-          </button>
-          <p className="mt-2 text-[11px] text-neutral-400">상담료 없음 · 1대1 맞춤 상담</p>
         </div>
         </div>
       </section>
@@ -368,50 +327,6 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* ════ 6. 상담 요청 ════ */}
-      <section id="form-anchor" className="bg-neutral-50 px-6 py-12">
-        <div className="mx-auto max-w-lg">
-        <h2 className="mb-2 text-[21px] font-bold -tracking-[0.015em]">상담 요청</h2>
-        <div className="mb-4 h-[3px] w-[34px] bg-[#1B3357]" />
-        <div className="mb-5 flex items-center gap-2 rounded-lg bg-[#EDF1F7] px-4 py-2.5">
-          <span className="text-[16px]">📞</span>
-          <p className="text-[12px] font-semibold text-[#15294A]">1영업일 이내 연락드립니다</p>
-        </div>
-
-        {status === 'done' ? (
-          <div className="rounded border border-neutral-300 bg-white p-8 text-center">
-            <p className="mb-2 text-[17px] font-bold text-[#15294A]">신청이 완료되었습니다</p>
-            <p className="text-[13px] leading-relaxed text-neutral-500">1영업일 이내 연락드리겠습니다. 감사합니다.</p>
-          </div>
-        ) : (
-          <div className="rounded border border-neutral-300 bg-white p-6">
-            <label className="mb-1.5 block text-[13px] font-semibold">이름<span className="ml-1 text-[11px] font-normal text-red-600">필수</span></label>
-            <input value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="홍길동" className="w-full rounded border border-neutral-300 px-3.5 py-3 text-[14px]" />
-
-            <label className="mb-1.5 mt-[1.15rem] block text-[13px] font-semibold">연락처<span className="ml-1 text-[11px] font-normal text-red-600">필수</span></label>
-            <input value={ph} onChange={(e) => setPh(e.target.value)} type="tel" placeholder="010-0000-0000" className="w-full rounded border border-neutral-300 px-3.5 py-3 text-[14px]" />
-
-            <div className="my-[1.15rem] rounded bg-neutral-50 p-3.5">
-              <p className="mb-2.5 text-[11px] leading-[1.75] text-neutral-500">
-                [필수] 개인정보 수집·이용 동의<br />
-                수집 항목: 이름, 연락처 | 목적: 보험 상담 연락 | 보유 기간: 상담 종료 후 즉시 파기
-              </p>
-              <label className="flex items-start gap-2 text-[12px]">
-                <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#15294A]" />
-                위 내용을 확인하였으며 개인정보 수집·이용에 동의합니다.
-              </label>
-            </div>
-
-            {status === 'error' && <p className="mb-2 text-[12px] text-red-600">전송에 실패했습니다. 잠시 후 다시 시도해 주세요.</p>}
-
-            <button onClick={handleSubmit} disabled={status === 'sending'} className="mt-1 w-full rounded bg-[#15294A] py-[15px] text-[15px] font-bold text-white disabled:opacity-60">
-              {status === 'sending' ? '전송 중…' : '무료 상담 신청하기'}
-            </button>
-          </div>
-        )}
-        </div>
-      </section>
-
       {/* ════ 푸터 (매트 블랙) ════ */}
       <footer className="bg-[#111114] px-6 py-8">
         <div className="mx-auto max-w-5xl">
@@ -425,6 +340,144 @@ export default function LandingPage({
         </p>
         </div>
       </footer>
+
+      {/* ════ 플로팅 CTA ════ */}
+      {!formOpen && (
+        <div className="fixed inset-x-0 bottom-6 z-40 flex justify-center px-5">
+          <button
+            onClick={openFormModal}
+            className="w-full max-w-sm rounded-full bg-[#15294A] py-4 text-[15px] font-bold text-white shadow-[0_6px_24px_rgba(21,41,74,0.45)]"
+          >
+            {status === 'done' ? '✓ 신청 완료' : ctaText}
+          </button>
+        </div>
+      )}
+
+      {/* ════ 상담 신청 모달 ════ */}
+      {formOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6"
+          style={{
+            background: 'rgba(8,15,30,0.6)',
+            backdropFilter: 'blur(6px)',
+            animation: `${formClosing ? 'kp-fade-out' : 'kp-fade-in'} 0.26s ease both`,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) closeFormModal() }}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="w-full max-w-lg rounded-t-[28px] bg-white sm:rounded-[28px]"
+            style={{ animation: `${formClosing ? 'kp-sheet-out' : 'kp-sheet-in'} 0.28s cubic-bezier(0.32,0.72,0,1) both` }}
+          >
+            {/* 드래그 핸들 */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="h-1 w-10 rounded-full bg-neutral-200" />
+            </div>
+
+            {/* 헤더 */}
+            <div className="flex items-start justify-between px-6 pt-4 pb-5 sm:pt-6">
+              <div>
+                <p className="text-[11px] font-semibold tracking-[0.08em] text-[#7FA8D8]">KPARTNERS</p>
+                <h2 className="mt-1 text-[20px] font-bold -tracking-[0.02em] text-[#15294A]">무료 보장분석 신청</h2>
+                <p className="mt-1 text-[13px] text-neutral-400">이름과 연락처만 남겨주시면<br />1영업일 이내 연락드립니다.</p>
+              </div>
+              <button
+                onClick={closeFormModal}
+                aria-label="닫기"
+                className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-[14px] text-neutral-500"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="px-6 pb-7 sm:pb-8">
+              {status === 'done' ? (
+                /* 완료 */
+                <div className="flex flex-col items-center py-6 text-center">
+                  <svg width="52" height="52" viewBox="0 0 52 52" fill="none" className="mb-4">
+                    <circle cx="26" cy="26" r="26" fill="#EDF4FF" />
+                    <polyline
+                      points="15,27 22,34 37,19"
+                      fill="none"
+                      stroke="#15294A"
+                      strokeWidth="2.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeDasharray="40"
+                      strokeDashoffset="0"
+                      style={{ animation: 'kp-check 0.4s 0.1s ease both' }}
+                    />
+                  </svg>
+                  <p className="text-[18px] font-bold text-[#15294A]">신청이 완료됐습니다</p>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-400">1영업일 이내 연락드리겠습니다.</p>
+                  <button
+                    onClick={closeFormModal}
+                    className="mt-6 w-full rounded-full bg-neutral-100 py-3.5 text-[14px] font-semibold text-neutral-600"
+                  >
+                    닫기
+                  </button>
+                </div>
+              ) : (
+                /* 폼 */
+                <>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="mb-1.5 block text-[12px] font-semibold text-neutral-500">
+                        이름 <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        type="text"
+                        placeholder="홍길동"
+                        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3.5 text-[15px] outline-none transition-colors focus:border-[#15294A] focus:bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-[12px] font-semibold text-neutral-500">
+                        연락처 <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        value={ph}
+                        onChange={(e) => setPh(e.target.value)}
+                        type="tel"
+                        placeholder="010-0000-0000"
+                        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3.5 text-[15px] outline-none transition-colors focus:border-[#15294A] focus:bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <label className="mt-4 flex items-start gap-2.5 rounded-xl bg-neutral-50 px-4 py-3.5 text-[11.5px] leading-[1.7] text-neutral-500">
+                    <input
+                      type="checkbox"
+                      checked={agreed}
+                      onChange={(e) => setAgreed(e.target.checked)}
+                      className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#15294A]"
+                    />
+                    <span>
+                      <b className="font-semibold text-neutral-700">[필수]</b> 개인정보 수집·이용 동의&nbsp;—&nbsp;
+                      수집 항목: 이름, 연락처 | 목적: 보험 상담 연락 | 보유: 상담 종료 후 즉시 파기
+                    </span>
+                  </label>
+
+                  {status === 'error' && (
+                    <p className="mt-3 text-[12px] text-red-500">전송에 실패했습니다. 잠시 후 다시 시도해 주세요.</p>
+                  )}
+
+                  <button
+                    onClick={handleSubmit}
+                    disabled={status === 'sending'}
+                    className="mt-4 w-full rounded-full bg-[#15294A] py-4 text-[15px] font-bold text-white shadow-[0_4px_16px_rgba(21,41,74,0.35)] transition-opacity disabled:opacity-60"
+                  >
+                    {status === 'sending' ? '전송 중…' : '무료 상담 신청하기'}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ════ 경각심 팝업 (배경 블러) ════ */}
       {concern && (
@@ -447,15 +500,9 @@ export default function LandingPage({
             <h3 className="mb-3 text-[18px] font-bold leading-[1.4] -tracking-[0.01em]">{concern.title}</h3>
             <p className="mb-3.5 rounded-md bg-[#EDF1F7] px-3 py-2.5 text-[12.5px] font-semibold leading-[1.5] text-[#15294A]">{concern.stat}</p>
             <p className="mb-3.5 text-[13px] leading-[1.75] text-neutral-500">{concern.body}</p>
-            <p className="mb-5 border-l-[3px] border-[#1B3357] py-0.5 pl-3 text-[12.5px] leading-[1.65]">
+            <p className="border-l-[3px] border-[#1B3357] py-0.5 pl-3 text-[12.5px] leading-[1.65]">
               <b className="font-bold text-[#15294A]">점검 포인트 </b>{concern.point}
             </p>
-            <button
-              onClick={() => closePopup(() => setTimeout(() => scrollTo('form-anchor'), 80))}
-              className="w-full rounded-lg bg-[#15294A] py-3.5 text-[14px] font-bold text-white"
-            >
-              내 보장 무료로 점검받기 →
-            </button>
           </div>
         </div>
       )}
