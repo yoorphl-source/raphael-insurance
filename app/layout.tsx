@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "[브랜드명] | 보험 비교 채팅 상담",
-  description: "여러 생명·손해보험사 상품을 채팅으로 간편하게 비교하세요. 가입 압박 없이 궁금한 것만 먼저 확인할 수 있습니다.",
+  title: 'KPARTNERS | 보험 비교·분석',
+  description: '여러 보험사를 한 번에 비교·분석. 무료 상담.',
 };
 
 export const viewport: Viewport = {

@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { submitLandingLead } from '@/app/actions/submitLandingLead'
 
-type Review = { quote: string; by: string }
 type Faq = { q: string; a: string }
 
 export type LandingPageProps = {
@@ -12,14 +11,13 @@ export type LandingPageProps = {
   headline?: string
   sub?: string
   ctaText?: string
-  reviews?: Review[]
   partners?: string[]
   faqs?: Faq[]
   phone?: string
   heroImage?: string
 }
 
-/* ── SVG 아이콘 (이모지 대체 — 모든 기기 렌더링 보장) ── */
+/* ── SVG 아이콘 (모든 기기 렌더링 보장) ── */
 function ConcernIcon({ id }: { id: string }) {
   const cls = 'h-5 w-5 stroke-white'
   const base = { fill: 'none', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
@@ -54,12 +52,6 @@ function ConcernIcon({ id }: { id: string }) {
       return null
   }
 }
-
-const DEFAULT_REVIEWS: Review[] = [
-  { quote: '중복으로 내던 실손보험을 정리해 매달 4만 원을 아꼈습니다. 부담 주지 않고 차근차근 설명해 주셔서 좋았어요.', by: '김○○ · 30대 직장인' },
-  { quote: '보장이 빠진 부분을 짚어주셔서 안심하고 보완했습니다. 가입 강요가 전혀 없어 신뢰가 갔습니다.', by: '이○○ · 40대 자영업' },
-  { quote: '자녀 보험을 알아보다 상담받았는데, 필요한 것만 추려주셔서 결정이 쉬웠습니다.', by: '박○○ · 30대 학부모' },
-]
 
 const DEFAULT_PARTNERS = [
   '/logos/logo01.png', '/logos/logo02.png', '/logos/logo03.png', '/logos/logo04.png',
@@ -112,24 +104,35 @@ const CONCERNS = [
   },
 ] as const
 
+const STEPS = [
+  { num: '01', title: '간단 신청', meta: null, desc: '이름과 연락처만 입력' },
+  { num: '02', title: '전화 상담', meta: '10~15분', desc: '현재 가입 내역 확인' },
+  { num: '03', title: '분석 결과 안내', meta: null, desc: '중복·공백 정리 후 안내' },
+]
+
 export default function LandingPage({
   source,
   label = '무료 보장분석 서비스',
   headline = '내 보험, 제대로\n비교하고 계신가요?',
   sub = '여러 보험사 상품을 한 번에 비교·분석해\n지금 가장 합리적인 선택을 찾아드립니다.',
-  ctaText = '무료 비교/분석 신청하기',
-  reviews = DEFAULT_REVIEWS,
+  ctaText = '무료 상담 신청하기',
   partners = DEFAULT_PARTNERS,
   faqs = DEFAULT_FAQS,
-  phone = '010-0000-0000',
   heroImage,
 }: LandingPageProps) {
 
-  /* ── 스크롤 반응형 헤더 ── */
+  /* ── 헤더 스크롤 + CTA 버튼 숨김 ── */
   const [scrolled, setScrolled] = useState(false)
+  const [hideButton, setHideButton] = useState(false)
+
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40)
+    const onScroll = () => {
+      setScrolled(window.scrollY > 40)
+      const form = document.getElementById('form-anchor')
+      if (form) setHideButton(form.getBoundingClientRect().top < window.innerHeight)
+    }
     window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
@@ -137,55 +140,29 @@ export default function LandingPage({
   const [openKey, setOpenKey] = useState<string | null>(null)
   const [closing, setClosing] = useState(false)
   const concern = CONCERNS.find((c) => c.key === openKey)
+
   function closePopup() {
     setClosing(true)
     setTimeout(() => { setOpenKey(null); setClosing(false) }, 200)
   }
 
-  /* ── 상담 신청 모달 ── */
-  const [formOpen, setFormOpen] = useState(false)
-  const [formClosing, setFormClosing] = useState(false)
-  function openFormModal() { setFormOpen(true) }
-  function closeFormModal() {
-    setFormClosing(true)
-    setTimeout(() => { setFormOpen(false); setFormClosing(false) }, 280)
-  }
-
-  /* ── ESC 키 / 스크롤 잠금 ── */
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { if (formOpen) closeFormModal(); else if (openKey) closePopup() }
-    }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && openKey) closePopup() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [formOpen, openKey])
+  }, [openKey])
 
   useEffect(() => {
-    const locked = !!(openKey || formOpen)
-    const sw = window.innerWidth - document.documentElement.clientWidth
-    document.body.style.overflow = locked ? 'hidden' : ''
-    document.body.style.paddingRight = locked ? `${sw}px` : ''
+    if (openKey) {
+      const sw = window.innerWidth - document.documentElement.clientWidth
+      document.body.style.overflow = 'hidden'
+      document.body.style.paddingRight = `${sw}px`
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
+    }
     return () => { document.body.style.overflow = ''; document.body.style.paddingRight = '' }
-  }, [openKey, formOpen])
-
-  /* ── 후기 자동 슬라이드 ── */
-  const trackRef = useRef<HTMLDivElement>(null)
-  const idxRef = useRef(0)
-  const pausedRef = useRef(false)
-  const [active, setActive] = useState(0)
-  useEffect(() => {
-    const el = trackRef.current
-    if (!el) return
-    const timer = setInterval(() => {
-      if (pausedRef.current) return
-      const cards = el.children
-      if (!cards.length) return
-      idxRef.current = (idxRef.current + 1) % cards.length
-      el.scrollTo({ left: (cards[idxRef.current] as HTMLElement).offsetLeft, behavior: 'smooth' })
-      setActive(idxRef.current)
-    }, 3200)
-    return () => clearInterval(timer)
-  }, [reviews.length])
+  }, [openKey])
 
   /* ── FAQ 아코디언 ── */
   const [openFaq, setOpenFaq] = useState(0)
@@ -215,8 +192,6 @@ export default function LandingPage({
         @keyframes kp-fade-out{from{opacity:1}to{opacity:0}}
         @keyframes kp-scale-in{from{opacity:0;transform:scale(0.94) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
         @keyframes kp-scale-out{from{opacity:1;transform:scale(1) translateY(0)}to{opacity:0;transform:scale(0.94) translateY(8px)}}
-        @keyframes kp-sheet-in{from{transform:translateY(100%)}to{transform:translateY(0)}}
-        @keyframes kp-sheet-out{from{transform:translateY(0)}to{transform:translateY(100%)}}
         @keyframes kp-check{0%{stroke-dashoffset:40}100%{stroke-dashoffset:0}}
         @keyframes kp-pop{0%{transform:scale(0.9);opacity:0}60%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
       `}</style>
@@ -290,40 +265,32 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* ════ 3. 고객 후기 ════ */}
+      {/* ════ 3. 상담 프로세스 3단계 ════ */}
       <section className="bg-white px-6 py-12">
         <div className="mx-auto max-w-5xl">
-          <h2 className="mb-2 text-[21px] font-bold -tracking-[0.015em]">고객 후기</h2>
-          <div className="mb-4 h-[3px] w-[34px] bg-[#1B3357]" />
-          <p className="mb-6 text-[13px] text-neutral-500">실제 상담을 받으신 분들의 이야기입니다.</p>
-          <div
-            ref={trackRef}
-            onMouseEnter={() => (pausedRef.current = true)}
-            onMouseLeave={() => (pausedRef.current = false)}
-            onTouchStart={() => (pausedRef.current = true)}
-            className="flex gap-3 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            style={{ scrollSnapType: 'x mandatory' }}
-          >
-            {reviews.map((r, i) => (
-              <div
-                key={i}
-                className="shrink-0 basis-[82%] rounded-xl border border-neutral-100 bg-white px-5 pb-4 pt-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)] md:basis-[48%]"
-                style={{ scrollSnapAlign: 'start' }}
-              >
-                <svg className="mb-3 h-6 w-6 opacity-20" viewBox="0 0 24 24" fill="#1B3357">
-                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                </svg>
-                <p className="mb-4 text-[14px] leading-[1.78]">{r.quote}</p>
-                <p className="border-t border-neutral-100 pt-2.5 text-[12px] text-neutral-400">{r.by}</p>
+          <h2 className="mb-2 text-[21px] font-bold -tracking-[0.015em]">전문 상담사와 이렇게 진행합니다</h2>
+          <div className="mb-8 h-[3px] w-[34px] bg-[#1B3357]" />
+          <div className="grid gap-0 md:grid-cols-3">
+            {STEPS.map((s, i) => (
+              <div key={i} className="relative flex items-start gap-4 pb-8 last:pb-0 md:flex-col md:pb-0 md:pr-10 md:last:pr-0">
+                {/* 세로 연결선 (모바일) */}
+                {i < STEPS.length - 1 && (
+                  <div className="absolute left-[19px] top-11 h-[calc(100%-28px)] w-px bg-neutral-200 md:hidden" />
+                )}
+                {/* 가로 연결선 (데스크탑) */}
+                {i < STEPS.length - 1 && (
+                  <div className="absolute left-[calc(100%-2.5rem)] top-5 hidden w-10 border-t border-dashed border-neutral-300 md:block" />
+                )}
+                {/* 번호 원 */}
+                <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#15294A] text-[13px] font-bold text-white">
+                  {s.num}
+                </div>
+                <div className="md:mt-4">
+                  <p className="text-[15px] font-bold text-neutral-900">{s.title}</p>
+                  {s.meta && <p className="mt-0.5 text-[12px] text-[#1B3357]">{s.meta}</p>}
+                  <p className="mt-1 text-[13px] leading-[1.7] text-neutral-500">{s.desc}</p>
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="mt-3 flex justify-center gap-1.5">
-            {reviews.map((_, i) => (
-              <span
-                key={i}
-                className={`rounded-full transition-all duration-300 ${i === active ? 'w-5 h-1.5 bg-[#1B3357]' : 'w-1.5 h-1.5 bg-neutral-300'}`}
-              />
             ))}
           </div>
         </div>
@@ -336,7 +303,6 @@ export default function LandingPage({
           <div className="mb-4 h-[3px] w-[34px] bg-[#1B3357]" />
           <p className="mb-6 text-[13px] text-neutral-500">여러 보험사 상품을 비교해 안내해 드립니다.</p>
         </div>
-        {/* 마키 — 좌우 페이드 마스크 */}
         <div className="relative overflow-hidden">
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-neutral-50 to-transparent" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-neutral-50 to-transparent" />
@@ -351,7 +317,7 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* ════ 5. FAQ — 스무스 아코디언 ════ */}
+      {/* ════ 5. FAQ ════ */}
       <section className="bg-white px-6 py-12">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-2 text-[21px] font-bold -tracking-[0.015em]">자주 묻는 질문</h2>
@@ -381,12 +347,99 @@ export default function LandingPage({
         </div>
       </section>
 
+      {/* ════ 6. 상담 신청 폼 ════ */}
+      <section id="form-anchor" className="bg-neutral-50 px-6 py-12">
+        <div className="mx-auto max-w-lg">
+          <h2 className="mb-2 text-[21px] font-bold -tracking-[0.015em]">상담 신청</h2>
+          <div className="mb-5 h-[3px] w-[34px] bg-[#1B3357]" />
+          <div className="mb-5 flex items-center gap-2.5 rounded-lg bg-[#EDF1F7] px-4 py-2.5">
+            <svg className="h-4 w-4 shrink-0 text-[#15294A]" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 4a2 2 0 0 1 2-2h1.6a1 1 0 0 1 .97.757l.745 2.98a1 1 0 0 1-.27.974l-1.2 1.2a11.05 11.05 0 0 0 4.243 4.243l1.2-1.2a1 1 0 0 1 .974-.27l2.98.745A1 1 0 0 1 16 12.4V14a2 2 0 0 1-2 2C6.268 16 2 8.268 2 4z" />
+            </svg>
+            <p className="text-[12px] font-semibold text-[#15294A]">1영업일 이내 연락드립니다</p>
+          </div>
+
+          {status === 'done' ? (
+            <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center">
+              <div style={{ animation: 'kp-pop 0.4s ease both' }}>
+                <svg width="52" height="52" viewBox="0 0 52 52" fill="none" className="mx-auto mb-4">
+                  <circle cx="26" cy="26" r="26" fill="#EDF4FF" />
+                  <polyline
+                    points="15,27 22,34 37,19"
+                    fill="none" stroke="#15294A" strokeWidth="2.8"
+                    strokeLinecap="round" strokeLinejoin="round"
+                    strokeDasharray="40" strokeDashoffset="0"
+                    style={{ animation: 'kp-check 0.4s 0.15s ease both' }}
+                  />
+                </svg>
+              </div>
+              <p className="mb-1.5 text-[17px] font-bold text-[#15294A]">신청이 완료됐습니다</p>
+              <p className="text-[13px] leading-relaxed text-neutral-500">1영업일 이내 연락드리겠습니다. 감사합니다.</p>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-neutral-200 bg-white p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-semibold">
+                    이름 <span className="ml-0.5 text-[11px] font-normal text-red-500">필수</span>
+                  </label>
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    type="text"
+                    placeholder="홍길동"
+                    className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3.5 text-[14px] outline-none transition-colors focus:border-[#15294A] focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-semibold">
+                    연락처 <span className="ml-0.5 text-[11px] font-normal text-red-500">필수</span>
+                  </label>
+                  <input
+                    value={ph}
+                    onChange={(e) => setPh(e.target.value)}
+                    type="tel"
+                    placeholder="010-0000-0000"
+                    className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3.5 text-[14px] outline-none transition-colors focus:border-[#15294A] focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              <label className="mt-4 flex cursor-pointer items-start gap-2.5 rounded-xl bg-neutral-50 px-4 py-3.5 text-[11.5px] leading-[1.7] text-neutral-500">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#15294A]"
+                />
+                <span>
+                  <b className="font-semibold text-neutral-700">[필수]</b> 개인정보 수집·이용 동의 —
+                  수집 항목: 이름, 연락처 | 목적: 보험 상담 연락 | 보유: 상담 종료 후 즉시 파기
+                </span>
+              </label>
+
+              {status === 'error' && (
+                <p className="mt-3 text-[12px] text-red-500">전송에 실패했습니다. 잠시 후 다시 시도해 주세요.</p>
+              )}
+
+              <button
+                onClick={handleSubmit}
+                disabled={status === 'sending'}
+                className="mt-4 w-full rounded-full bg-[#15294A] py-4 text-[15px] font-bold text-white shadow-[0_4px_16px_rgba(21,41,74,0.25)] transition-all duration-150 active:scale-[0.98] disabled:opacity-60"
+              >
+                {status === 'sending' ? '전송 중…' : '무료 상담 신청하기'}
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* ════ 푸터 ════ */}
       <footer className="bg-[#111114] px-6 py-8">
         <div className="mx-auto max-w-5xl">
           <div className="mb-2.5 text-[14px] font-bold tracking-[0.04em] text-white">KPARTNERS</div>
           <p className="text-[11px] leading-[1.9] text-neutral-500">
-            상호: 케이파트너스 | 대표: 장현 | 소속: MICASSET<br />
+            상호: 케이파트너스 | 소속: 케이파트너스<br />
             사업자등록번호: 000-00-00000<br />
             보험광고 심의필: 제2026-0000호 (생명보험협회 / 손해보험협회)<br />
             준법감시인 확인필 제2026-0000호<br /><br />
@@ -395,142 +448,15 @@ export default function LandingPage({
         </div>
       </footer>
 
-      {/* ════ 플로팅 CTA ════ */}
-      {!formOpen && (
+      {/* ════ 플로팅 CTA (폼 섹션 도달 시 숨김) ════ */}
+      {!hideButton && (
         <div className="fixed inset-x-0 bottom-6 z-40 flex justify-center px-5">
           <button
-            onClick={openFormModal}
+            onClick={() => document.getElementById('form-anchor')?.scrollIntoView({ behavior: 'smooth' })}
             className="w-full max-w-sm rounded-full bg-[#15294A] py-4 text-[15px] font-bold text-white shadow-[0_6px_24px_rgba(21,41,74,0.45)] transition-transform duration-150 active:scale-[0.97]"
           >
-            {status === 'done' ? '✓ 신청 완료' : ctaText}
+            {ctaText}
           </button>
-        </div>
-      )}
-
-      {/* ════ 상담 신청 모달 (바텀 시트) ════ */}
-      {formOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center"
-          style={{
-            background: 'rgba(8,15,30,0.65)',
-            backdropFilter: 'blur(6px)',
-            animation: `${formClosing ? 'kp-fade-out' : 'kp-fade-in'} 0.26s ease both`,
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) closeFormModal() }}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            className="w-full max-w-lg overflow-hidden rounded-t-[28px] bg-white"
-            style={{ animation: `${formClosing ? 'kp-sheet-out' : 'kp-sheet-in'} 0.3s cubic-bezier(0.32,0.72,0,1) both` }}
-          >
-            {/* 상단 그라데이션 액센트 */}
-            <div className="h-1 w-full bg-gradient-to-r from-[#15294A] via-[#3A6EA5] to-[#7FA8D8]" />
-
-            {/* 드래그 핸들 */}
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="h-1 w-10 rounded-full bg-neutral-200" />
-            </div>
-
-            {/* 헤더 */}
-            <div className="flex items-start justify-between px-6 pt-3 pb-5">
-              <div>
-                <p className="text-[11px] font-semibold tracking-[0.08em] text-[#7FA8D8]">KPARTNERS</p>
-                <h2 className="mt-0.5 text-[20px] font-bold -tracking-[0.02em] text-[#15294A]">무료 보장분석 신청</h2>
-                <p className="mt-1 text-[13px] text-neutral-400">이름과 연락처만 남겨주시면 1영업일 이내 연락드립니다.</p>
-              </div>
-              <button
-                onClick={closeFormModal}
-                aria-label="닫기"
-                className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-100 transition-colors hover:bg-neutral-200"
-              >
-                <svg viewBox="0 0 14 14" className="h-3.5 w-3.5" fill="none" stroke="#666" strokeWidth="1.8" strokeLinecap="round">
-                  <path d="M1 1l12 12M13 1 1 13" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="px-6 pb-8">
-              {status === 'done' ? (
-                <div className="flex flex-col items-center py-6 text-center">
-                  <div style={{ animation: 'kp-pop 0.4s ease both' }}>
-                    <svg width="56" height="56" viewBox="0 0 56 56" fill="none" className="mb-4">
-                      <circle cx="28" cy="28" r="28" fill="#EDF4FF" />
-                      <polyline
-                        points="17,29 24,36 39,21"
-                        fill="none" stroke="#15294A" strokeWidth="2.8"
-                        strokeLinecap="round" strokeLinejoin="round"
-                        strokeDasharray="40" strokeDashoffset="0"
-                        style={{ animation: 'kp-check 0.4s 0.15s ease both' }}
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-[18px] font-bold text-[#15294A]">신청이 완료됐습니다</p>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-400">1영업일 이내 연락드리겠습니다.</p>
-                  <button
-                    onClick={closeFormModal}
-                    className="mt-6 w-full rounded-full bg-neutral-100 py-3.5 text-[14px] font-semibold text-neutral-600 transition-colors hover:bg-neutral-200"
-                  >
-                    닫기
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-3.5">
-                    <div>
-                      <label className="mb-1.5 block text-[12px] font-semibold text-neutral-500">
-                        이름 <span className="text-red-400">*</span>
-                      </label>
-                      <input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        type="text"
-                        placeholder="홍길동"
-                        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3.5 text-[15px] outline-none transition-colors focus:border-[#15294A] focus:bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1.5 block text-[12px] font-semibold text-neutral-500">
-                        연락처 <span className="text-red-400">*</span>
-                      </label>
-                      <input
-                        value={ph}
-                        onChange={(e) => setPh(e.target.value)}
-                        type="tel"
-                        placeholder="010-0000-0000"
-                        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3.5 text-[15px] outline-none transition-colors focus:border-[#15294A] focus:bg-white"
-                      />
-                    </div>
-                  </div>
-
-                  <label className="mt-3.5 flex cursor-pointer items-start gap-2.5 rounded-xl bg-neutral-50 px-4 py-3.5 text-[11.5px] leading-[1.7] text-neutral-500">
-                    <input
-                      type="checkbox"
-                      checked={agreed}
-                      onChange={(e) => setAgreed(e.target.checked)}
-                      className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#15294A]"
-                    />
-                    <span>
-                      <b className="font-semibold text-neutral-700">[필수]</b> 개인정보 수집·이용 동의 —
-                      수집 항목: 이름, 연락처 | 목적: 보험 상담 연락 | 보유: 상담 종료 후 즉시 파기
-                    </span>
-                  </label>
-
-                  {status === 'error' && (
-                    <p className="mt-3 text-[12px] text-red-500">전송에 실패했습니다. 잠시 후 다시 시도해 주세요.</p>
-                  )}
-
-                  <button
-                    onClick={handleSubmit}
-                    disabled={status === 'sending'}
-                    className="mt-4 w-full rounded-full bg-[#15294A] py-4 text-[15px] font-bold text-white shadow-[0_4px_16px_rgba(21,41,74,0.3)] transition-all duration-150 active:scale-[0.98] disabled:opacity-60"
-                  >
-                    {status === 'sending' ? '전송 중…' : '무료 상담 신청하기'}
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
         </div>
       )}
 
@@ -551,11 +477,8 @@ export default function LandingPage({
             className="relative max-h-[85vh] w-full max-w-md overflow-auto rounded-2xl bg-white"
             style={{ animation: `${closing ? 'kp-scale-out' : 'kp-scale-in'} 0.2s ease both` }}
           >
-            {/* 상단 컬러 바 */}
             <div className="h-1 w-full rounded-t-2xl bg-gradient-to-r from-[#15294A] via-[#3A6EA5] to-[#7FA8D8]" />
-
             <div className="p-6">
-              {/* 닫기 버튼 */}
               <button
                 onClick={() => closePopup()}
                 aria-label="닫기"
@@ -565,15 +488,12 @@ export default function LandingPage({
                   <path d="M1 1l12 12M13 1 1 13" />
                 </svg>
               </button>
-
-              {/* 아이콘 */}
               <span
                 className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#15294A]"
                 style={{ animation: 'kp-pop 0.35s ease both' }}
               >
                 <ConcernIcon id={concern.key} />
               </span>
-
               <h3 className="mb-3 text-[18px] font-bold leading-[1.4] -tracking-[0.01em]">{concern.title}</h3>
               <p className="mb-3.5 rounded-lg bg-[#EDF1F7] px-3.5 py-2.5 text-[12.5px] font-semibold leading-[1.55] text-[#15294A]">
                 {concern.stat}
