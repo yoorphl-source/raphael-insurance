@@ -185,7 +185,7 @@ export default function LandingPage({
   const partnersLoop = [...partners, ...partners]
 
   return (
-    <div className="font-sans text-[15px] leading-relaxed antialiased text-neutral-900 pb-[76px]">
+    <div className="font-sans text-[15px] leading-relaxed antialiased text-neutral-900 pb-20">
       <style>{`
         @keyframes kp-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
         @keyframes kp-fade-in{from{opacity:0}to{opacity:1}}
@@ -207,8 +207,8 @@ export default function LandingPage({
       </header>
 
       {/* ════ 1. 히어로 ════ */}
-      <section className="bg-[#15294A] px-6 pb-14 pt-[5.5rem]">
-        <div className="mx-auto flex max-w-5xl flex-col gap-9 md:flex-row md:items-center">
+      <section className="bg-[#15294A] px-6 pb-12 pt-[5.5rem]">
+        <div className="mx-auto flex max-w-5xl flex-col gap-7 md:flex-row md:items-center">
           <div className="md:flex-1">
             <p className="mb-4 text-[12px] font-semibold tracking-[0.08em] text-[#9DB4D4]">{label}</p>
             <h1 className="mb-4 whitespace-pre-line text-[29px] font-bold leading-[1.38] -tracking-[0.025em] text-white md:text-[34px]">
@@ -246,7 +246,7 @@ export default function LandingPage({
           <h2 className="mb-2 text-[21px] font-bold -tracking-[0.015em]">지금 내 보장, 충분할까요?</h2>
           <div className="mb-4 h-[3px] w-[34px] bg-[#1B3357]" />
           <p className="mb-6 text-[13px] text-neutral-500">가장 걱정되는 항목을 눌러 확인해 보세요.</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {CONCERNS.map((c) => (
               <button
                 key={c.key}
@@ -269,13 +269,13 @@ export default function LandingPage({
       <section className="bg-white px-6 py-12">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-2 text-[21px] font-bold -tracking-[0.015em]">전문 상담사와 이렇게 진행합니다</h2>
-          <div className="mb-8 h-[3px] w-[34px] bg-[#1B3357]" />
+          <div className="mb-6 h-[3px] w-[34px] bg-[#1B3357]" />
           <div className="grid gap-0 md:grid-cols-3">
             {STEPS.map((s, i) => (
-              <div key={i} className="relative flex items-start gap-4 pb-8 last:pb-0 md:flex-col md:pb-0 md:pr-10 md:last:pr-0">
+              <div key={i} className="relative flex items-start gap-4 pb-6 last:pb-0 md:flex-col md:pb-0 md:pr-10 md:last:pr-0">
                 {/* 세로 연결선 (모바일) */}
                 {i < STEPS.length - 1 && (
-                  <div className="absolute left-[19px] top-11 h-[calc(100%-28px)] w-px bg-neutral-200 md:hidden" />
+                  <div className="absolute left-[19px] top-10 h-[calc(100%-20px)] w-px bg-neutral-200 md:hidden" />
                 )}
                 {/* 가로 연결선 (데스크탑) */}
                 {i < STEPS.length - 1 && (
@@ -351,7 +351,7 @@ export default function LandingPage({
       <section id="form-anchor" className="bg-neutral-50 px-6 py-12">
         <div className="mx-auto max-w-lg">
           <h2 className="mb-2 text-[21px] font-bold -tracking-[0.015em]">상담 신청</h2>
-          <div className="mb-5 h-[3px] w-[34px] bg-[#1B3357]" />
+          <div className="mb-4 h-[3px] w-[34px] bg-[#1B3357]" />
           <div className="mb-5 flex items-center gap-2.5 rounded-lg bg-[#EDF1F7] px-4 py-2.5">
             <svg className="h-4 w-4 shrink-0 text-[#15294A]" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
               <path d="M2 4a2 2 0 0 1 2-2h1.6a1 1 0 0 1 .97.757l.745 2.98a1 1 0 0 1-.27.974l-1.2 1.2a11.05 11.05 0 0 0 4.243 4.243l1.2-1.2a1 1 0 0 1 .974-.27l2.98.745A1 1 0 0 1 16 12.4V14a2 2 0 0 1-2 2C6.268 16 2 8.268 2 4z" />
